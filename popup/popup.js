@@ -103,10 +103,10 @@ loadAll((data) => {
   updateApiStatus(data.apiKey);
   spinnerSummarizing.style.display = data.is_summarizing ? 'flex' : 'none';
   
-  currentLogData = data.logEntries;
+  currentIgnoredData = data.ignored_items;
+  currentLogData = data.logEntries.filter(e => !currentIgnoredData.some(i => i.status === e.status && i.text === e.text));
   renderLog(currentLogData);
   renderHistory(data.history);
-  currentIgnoredData = data.ignored_items;
   renderIgnored(currentIgnoredData);
   renderDebug(data.debugEntries);
   keystrokeLbl.textContent = data.keystrokeCount;
@@ -175,10 +175,10 @@ document.querySelectorAll('.tab').forEach(tab => {
     // Bỏ tự động reload liên tục với DOM nặng, chỉ reload loadAll khi nhảy tab
     if (tabName !== 'onboard') {
       loadAll((data) => {
-        currentLogData = data.logEntries;
+        currentIgnoredData = data.ignored_items;
+        currentLogData = data.logEntries.filter(e => !currentIgnoredData.some(i => i.status === e.status && i.text === e.text));
         renderLog(currentLogData);
         renderHistory(data.history);
-        currentIgnoredData = data.ignored_items;
         renderIgnored(currentIgnoredData);
         renderDebug(data.debugEntries);
         keystrokeLbl.textContent = data.keystrokeCount;
