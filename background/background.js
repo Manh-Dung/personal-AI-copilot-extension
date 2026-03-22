@@ -185,7 +185,7 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'GENERATE_DAILY_RECAP') { generateDailyRecap(); return; }
 });
 
-// ---- Daily Recap Engine (Phase 2) ----
+// ==== Phase 5: Long-term Memory & Token Optimization ====
 async function generateDailyRecap() {
   const d = new Date();
   const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -193,8 +193,13 @@ async function generateDailyRecap() {
   const allData = await storageGet(null);
   const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   
-  const todayLogs = Object.values(allData).filter(item => item.time >= startOfDay && item.status);
+  let todayLogs = Object.values(allData).filter(item => item.time >= startOfDay && item.status);
   const todayTimes = Object.entries(allData).filter(([k]) => k.startsWith(`active_${dateStr}`));
+  
+  // 1. Tối ưu Token: Chỉ lấy 80 log quan trọng nhất nếu quá dài, deduplicate nhẹ
+  if (todayLogs.length > 80) {
+    todayLogs = todayLogs.slice(-80); // Lấy 80 hành vi gần nhất
+  }
   
   if (!todayLogs.length && !todayTimes.length) {
     notify('Daily Insights', 'Chưa có hoạt động nào hôm nay để phân tích.');
@@ -202,34 +207,52 @@ async function generateDailyRecap() {
   }
   
   let activitiesText = todayTimes.map(([k, v]) => {
-    const domain = k.split('_').slice(2).join('_');
-    return `- ${domain}: ${Math.round(v.timeMs/60000)} phút, ${v.keystrokes} phím gõ`;
+    const domain = k.replace(`active_${dateStr}_`, '');
+    return `- ${domain}: ${Math.round(v.timeMs/60000)}p, ${v.keystrokes} phím`;
   }).join('\n');
   
+  // 2. Nén Context Window
   let logsText = todayLogs.map(m => {
-    return `- [${new Date(m.time).toLocaleTimeString('vi-VN')}] ${m.status}: ${m.text.slice(0, 150)}`;
+    // Chỉ lấy 100 kí tự để tiết kiệm token
+    const shortText = m.text.length > 100 ? m.text.slice(0, 100) + '...' : m.text;
+    return `[${new Date(m.time).toLocaleTimeString('vi-VN')}] ${m.status}: ${shortText}`;
   }).join('\n');
-  if(logsText.length > 5000) logsText = logsText.slice(0, 5000) + '... (cắt bớt)';
   
+  // 3. Sliding Window Memory (Knowledge Graph)
+  const memory = allData.long_term_memory || { strengths: [], weaknesses: [] };
+  const memoryContext = `
+BỘ NHỚ DÀI HẠN HIỆN TẠI TỪ CÁC NGÀY TRƯỚC:
+- Điểm mạnh hiện tại (Strengths): ${memory.strengths.join(', ') || 'Chưa có'}
+- Lỗ hổng / Kẹt (Weaknesses): ${memory.weaknesses.join(', ') || 'Chưa có'}
+  `;
+
   const prompt = `System Instruction:
-Bạn là một AI Mentor cá nhân xuất sắc về phương pháp học tập. Nhiệm vụ của bạn là phân tích dữ liệu hành vi trượt web, tìm kiếm, gõ code của tôi hôm nay để nhận diện điểm mạnh và lỗ hổng kiến thức.
+Bạn là một AI Mentor cá nhân xuất sắc về phương pháp học tập. Bạn đọc dữ liệu của tôi, kết hợp với Bộ Nhớ Dài Hạn để xem tôi đã tiến bộ hay vẫn kẹt ở lỗi cũ. 
+LUẬT SUY LUẬN (Inferred Resolution): Nếu tôi liên tục tìm kiếm/hỏi đáp về 1 lỗi/vấn đề, sau đó chỉ copy code/đọc và không hỏi nữa -> Khả năng cao tôi đã giải quyết xong lỗi đó, hãy đánh dấu là learned/mastered.
+
+${memoryContext}
+
 DỮ LIỆU THỜI GIAN THEO DOMAIN (Tính độ tập trung):
 ${activitiesText}
 
 CHI TIẾT LOG SỰ KIỆN (Nội dung đã đọc, search, copy):
 ${logsText}
 
-YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format chuẩn hoá:
+YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format như sau:
 {
-  "skills_practiced": ["Tên kĩ năng/công cụ 1"],
-  "struggles": ["Khái niệm/Lỗi đang bị mắc kẹt 1"],
+  "skills_practiced": ["Tên kĩ năng hôm nay"],
+  "struggles": ["Lỗi chưa giải quyết xong"],
   "productivity_score": 8,
-  "summary": "Nhận xét chi tiết (3-4 câu) chỉ ra chính xác mình đang yếu, đang kẹt ở tư duy nào và đưa ra lời khuyên thực chiến ngày mai dựa trên Kỹ Thuật Feynman hoặc Reverse Engineering thay vì cày Tutorial.",
-  "best_hours": "khoảng thời gian tập trung nhất"
+  "summary": "Nhắc nhở về điểm yếu (nếu bị giam > 3 ngày), gợi ý Reverse Engineering hoặc Feynman. Focus vào hành vi, không khen sáo rỗng.",
+  "best_hours": "09:00 - 11:00",
+  "knowledge_graph_update": {
+    "mastered": ["Kĩ năng/lỗi đã giải quyết được hôm nay (sẽ xoá khỏi Weaknesses)"],
+    "new_weaknesses": ["Vấn đề mới/lỗi đang vướng hôm nay"]
+  }
 }`;
 
   await storageSet({ is_recapizing: true });
-  notify('AI Copilot', 'Đang nghiền ngẫm hoạt động ngày hôm nay của bạn...');
+  notify('AI Copilot', 'Đang kết hợp Memory cũ để phân tích ngày hôm nay...');
   try {
     const { apiKey } = await storageGet(['apiKey']);
     if (!apiKey) { notify('Lỗi', 'Chưa cấu hình API Key!'); return; }
@@ -244,15 +267,36 @@ YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format 
     let textResult = data.choices?.[0]?.message?.content || "";
     textResult = textResult.replace(/```json/g, '').replace(/```/g, '').trim();
     
+    let parsed;
     try {
-      const parsed = JSON.parse(textResult);
-      parsed.generatedAt = Date.now();
-      await storageSet({ [`recap_${dateStr}`]: parsed });
-      notify('AI Copilot', 'Đã phân tích xong Insight trong ngày!');
+      parsed = JSON.parse(textResult);
     } catch(e) {
       dbg('JSON Parse lỗi của Recap AI: ' + textResult);
       notify('Lỗi phân tích', 'AI trả về định dạng sai.');
+      return;
     }
+
+    // Cập nhật Sliding Memory
+    if (parsed.knowledge_graph_update) {
+      let newStrengths = new Set([...memory.strengths, ...(parsed.knowledge_graph_update.mastered || [])]);
+      let newWeaknesses = new Set([...memory.weaknesses, ...(parsed.knowledge_graph_update.new_weaknesses || [])]);
+      
+      // Xóa điểm yếu đã được khắc phục
+      if (parsed.knowledge_graph_update.mastered) {
+        parsed.knowledge_graph_update.mastered.forEach(m => newWeaknesses.delete(m));
+      }
+      
+      await storageSet({ 
+        long_term_memory: { 
+          strengths: Array.from(newStrengths).slice(-20), // Giữ tối đa 20 điểm mạnh nhất
+          weaknesses: Array.from(newWeaknesses).slice(-10) 
+        } 
+      });
+    }
+
+    parsed.generatedAt = Date.now();
+    await storageSet({ [`recap_${dateStr}`]: parsed });
+    notify('AI Copilot', 'Đã cập nhật Memory và sinh Insight thành công!');
   } catch (err) {
     notify('Lỗi API', err.message);
   } finally {

@@ -18,6 +18,7 @@ const panelDebug   = document.getElementById('panel-debug');
 const customPromptInput= document.getElementById('customPrompt');
 const savePromptBtn= document.getElementById('savePrompt');
 const exportDataBtn= document.getElementById('exportData');
+const importFileInp= document.getElementById('importFile');
 const chkSent = document.getElementById('chk_sent');
 const chkDraft = document.getElementById('chk_draft');
 const chkCopy = document.getElementById('chk_copy');
@@ -39,7 +40,7 @@ function loadAll(cb) {
   chrome.storage.local.get(null, (all) => {
     const logEntries = Object.entries(all)
       .filter(([k]) => k.startsWith(LOG_PREFIX))
-      .map(([, v]) => v)
+      .map(([k, v]) => ({ storageKey: k, ...v }))
       .filter(Boolean)
       .sort((a, b) => (b.time || 0) - (a.time || 0)); // mới nhất trước
 
@@ -63,6 +64,9 @@ function loadAll(cb) {
 }
 
 // ---- Init ----
+let currentLogData = [];
+let currentFilter = 'all';
+
 loadAll((data) => {
   if (data.apiKey) apiKeyInput.value = data.apiKey;
   if (data.customPrompt) customPromptInput.value = data.customPrompt;
@@ -76,7 +80,9 @@ loadAll((data) => {
   }
   updateApiStatus(data.apiKey);
   spinnerSummarizing.style.display = data.is_summarizing ? 'flex' : 'none';
-  renderLog(data.logEntries);
+  
+  currentLogData = data.logEntries;
+  renderLog(currentLogData);
   renderHistory(data.history);
   renderDebug(data.debugEntries);
   keystrokeLbl.textContent = data.keystrokeCount;
@@ -136,19 +142,65 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    // Reload khi chuyển tab
-    loadAll((data) => {
-      renderLog(data.logEntries);
-      renderHistory(data.history);
-      renderDebug(data.debugEntries);
-      keystrokeLbl.textContent = data.keystrokeCount;
-      logCountLbl.textContent  = data.logEntries.length;
-    });
+    const tabName = tab.dataset.tab;
+    document.getElementById('panel-' + tabName).classList.add('active');
+    // Bỏ tự động reload liên tục với DOM nặng, chỉ reload loadAll khi nhảy tab
+    if (tabName !== 'onboard') {
+      loadAll((data) => {
+        currentLogData = data.logEntries;
+        renderLog(currentLogData);
+        renderHistory(data.history);
+        renderDebug(data.debugEntries);
+        keystrokeLbl.textContent = data.keystrokeCount;
+        logCountLbl.textContent  = data.logEntries.length;
+      });
+    }
   });
 });
 
-// ---- Xoá log ----
+// ---- Filter Log ----
+document.querySelectorAll('.tag-filter').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.tag-filter').forEach(b => b.classList.remove('active', 'btn-red'));
+    e.target.classList.add('active', 'btn-red');
+    currentFilter = e.target.dataset.filter;
+    renderLog(currentLogData);
+  });
+});
+
+// ---- Xoá log lẻ ----
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('del-log-btn')) {
+    const key = e.target.dataset.key;
+    chrome.storage.local.remove(key, () => {
+      e.target.closest('.log-item').remove();
+      currentLogData = currentLogData.filter(i => i.storageKey !== key);
+      logCountLbl.textContent = currentLogData.length;
+    });
+  }
+});
+
+// ---- Import Data ----
+importFileInp.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const importedData = JSON.parse(event.target.result);
+      // Merge với storage hiện tại
+      chrome.storage.local.set(importedData, () => {
+        alert('Nhập dữ liệu thành công!');
+        window.location.reload();
+      });
+    } catch(err) {
+      alert('File JSON lỗi: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ---- Xoá log toàn bộ hiện tại ----
 clearLogBtn.addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { type: 'CLEAR_LOG' }).catch(() => {});
@@ -196,10 +248,14 @@ const BADGE_LABEL = {
 };
 
 function renderLog(entries) {
-  Array.from(panelLog.querySelectorAll('.log-item')).forEach(el => el.remove());
-  if (!entries.length) { emptyLog.style.display = 'block'; return; }
+  const container = document.getElementById('log-list-container');
+  Array.from(container.querySelectorAll('.log-item')).forEach(el => el.remove());
+  
+  const filtered = currentFilter === 'all' ? entries : entries.filter(e => e.status === currentFilter);
+  
+  if (!filtered.length) { emptyLog.style.display = 'block'; return; }
   emptyLog.style.display = 'none';
-  entries.forEach(item => {
+  filtered.forEach(item => {
     const div = document.createElement('div');
     div.className = 'log-item';
     const label   = BADGE_LABEL[item.status] || (item.status || '').toUpperCase();
@@ -210,8 +266,10 @@ function renderLog(entries) {
       <div class="log-body">
         <div class="log-text">${escHtml(item.text)}</div>
         <div class="log-meta">${time} · ${item.url || ''}${trigger}</div>
-      </div>`;
-    panelLog.appendChild(div);
+      </div>
+      <button class="del-log-btn" data-key="${item.storageKey}" title="Xóa log này" style="background:none; border:none; color:var(--red-dim); font-size:16px; cursor:pointer;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--red-dim)'">&times;</button>
+      `;
+    container.appendChild(div);
   });
 }
 

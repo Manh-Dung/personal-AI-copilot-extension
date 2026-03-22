@@ -9,7 +9,15 @@
 - [x] Triển khai Phase 3: Trigger Real-time "Coaching" (Vòng lặp phản hồi)
   - [x] Bắt các dấu hiệu (Copy liên tục, ngâm StackOverflow/Docs lâu nhưng ít gõ)
   - [x] Inject Popup Shadow DOM đóng vai trò Cố vấn (Tutor)
-  - [x] Đẩy lời khuyên (Feynman, Micro-learning, Reverse-Engineering))
+  - [x] Đẩy lời khuyên (Feynman, Micro-learning, Reverse-Engineering)
+- [x] Phase 4: Quản lý Dữ liệu Hành Vi (UI/UX)
+  - [x] Tab hướng dẫn lấy API Key trực quan
+  - [x] Tính năng Import Data JSON
+  - [x] Tính năng Filter và Trích xuất xóa Log lẻ
+- [x] Phase 5: Tối Ưu Context Window & Bộ Nhớ Dài Hạn AI
+  - [x] Nén Token trước khi gửi OpenRouter
+  - [x] Suy luận vấn đề đã được giải quyết (Inferred Resolution)
+  - [x] Sinh Long-Term Knowledge Graph (điểm yếu, điểm mạnh, nhắc nhở))
   - [x] Dashboard vẽ biểu đồ cơ bản
 - [x] Tạo file README.md mô tả dự án và cách hoạt động theo yêu cầu
 - [x] Cấu trúc lại file và folder (Refactoring) cho dễ phát triển tiếp

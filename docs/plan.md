@@ -50,9 +50,18 @@ Không chỉ tóm tắt từng đoạn chat, chúng ta cần một cơ chế **E
   - `productivity_score` & `best_hours`.
   - Dữ liệu này được lưu lại để tạo Knowledge Graph cá nhân.
 
-### Phase 3: Trigger Real-time "Coaching" (Vòng lặp phản hồi)
-- Tiêm (Inject) một UI tinh tế vào góc trang khi thoả mãn điều kiện (VD: ở StackOverflow quá lâu, hoặc copy > 5 lần trong 5 phút).
-- Bắn ra gợi ý hành động dựa theo tuýp người thực dụng: *"Dừng đọc, mở editor lên gõ thử console.log dòng X xem sao"* hoặc *"Bạn có đang hiểu tại sao hàm này lại cần await không? (Feynman Technique)"*.
+### Phase 4: Quản lý Dữ liệu Cá nhân & Onboarding UI
+- **Tách riêng Tab API Guide**: Hướng dẫn user chưa biết code cách lấy API Key OpenRouter/Gemini.
+- **Log Management**: Lọc Log theo loại (Chỉ xem Copy, chỉ xem Phản hồi AI, v.v.), chức năng xóa từng log lẻ.
+- **Đồng bộ Data (Import/Export)**: Cung cấp tính năng tải file JSON của bộ nhớ lên thiết bị khác (Import) thay vì chỉ Export.
+
+### Phase 5: Xây dựng Bộ Nhớ Dài Hạn (Long-term Knowledge Graph) & Tối Ưu Token API
+- **Cách AI tối ưu Token:**
+  - *Context Window Compression*: Không gửi nguyên văn (Raw String) hàng nghìn dòng. Sẽ cắt tỉa/rút gọn text.
+  - *Sliding Window Memory*: Tạo 1 biến lưu trữ `long_term_memory`. Thay vì phân tích lại từ đầu mỗi ngày, AI lấy phân tích ngày hôm qua (đã tóm gọn) + raw data hôm nay = Phân tích ngày mới.
+- **Cơ chế Suy Luận Vòng Lặp Học Tập:**
+  - *Inferred Resolution (Mặc định giải quyết)*: Nếu AI phát hiện 1 chùm câu hỏi liên tiếp về 1 lỗi, sau đó user đi copy code nơi khác và không hỏi nữa -> Đánh dấu là đã vượt qua bug đó.
+  - *Knowledge Graph Mapping*: JSON đầu ra của AI cập nhật thêm biến `mastered` và `current_weaknesses`. Nếu điểm yếu bị giam > 3 ngày -> Nhắc nhở.
 
 ## Lời kết
 

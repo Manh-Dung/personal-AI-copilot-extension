@@ -108,11 +108,21 @@
     <div class="tab active" data-tab="log">Hoạt động</div>
     <div class="tab" data-tab="history">Tóm tắt AI</div>
     <div class="tab" data-tab="settings">Cài đặt</div>
+    <div class="tab" data-tab="onboard">🔑 Cài API</div>
     <div class="tab" data-tab="debug">Debug</div>
   </div>
 
   <div class="panel active" id="panel-log">
-    <div class="empty" id="emptyLog">Chưa có gì. Thử gõ gì đó trên trang web.</div>
+    <div style="padding: 10px 14px; background:var(--bg3); display:flex; gap:6px; overflow-x:auto; border-bottom:1px solid var(--border);" id="filterBar">
+      <button class="btn btn-ghost tag-filter active" data-filter="all">Tất cả</button>
+      <button class="btn btn-ghost tag-filter" data-filter="sent">Sent</button>
+      <button class="btn btn-ghost tag-filter" data-filter="copied">Copy</button>
+      <button class="btn btn-ghost tag-filter" data-filter="ai-response">AI</button>
+      <button class="btn btn-ghost tag-filter" data-filter="visited-page">Đọc</button>
+    </div>
+    <div id="log-list-container">
+      <div class="empty" id="emptyLog">Chưa có gì. Thử gõ gì đó trên trang web.</div>
+    </div>
   </div>
   <div class="panel" id="panel-history">
     <div class="empty" id="emptyHistory">Chưa có tóm tắt nào.</div>
@@ -143,9 +153,30 @@
       <button class="btn-save" id="saveTracking" style="margin-top:8px;">Lưu tuỳ chọn theo dõi</button>
     </div>
     <div class="settings-group" style="border-bottom:none; padding-bottom:16px;">
-      <button class="btn btn-ghost" id="exportData" style="width:100%; border:1px solid var(--border); padding:8px;">📦 Xuất toàn bộ dữ liệu (Export JSON)</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost" id="exportData" style="flex:1; border:1px solid var(--border); padding:8px;">📥 Export JSON</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()" style="flex:1; border:1px solid var(--border); padding:8px;">📤 Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" />
+      </div>
     </div>
   </div>
+  
+  <div class="panel" id="panel-onboard">
+    <div style="padding: 16px; font-size:13px; color:#d1d5db; line-height:1.6">
+      <h3 style="color:#fff; margin-bottom:10px;">Hướng dẫn kết nối Trí Tuệ Nhân Tạo</h3>
+      <p>Tool này hoạt động Offline 100% tại máy tính của bạn và xử lý data cục bộ. Để lấy Insight thông minh, hãy cấp cho nó 1 chìa khoá AI qua OpenRouter (Cổng kết nối AI rẻ và mạnh nhất).</p>
+      <ol style="margin-left:20px; margin-top:10px; margin-bottom:15px; display:flex; flex-direction:column; gap:8px;">
+        <li>Truy cập trang web: <a href="https://openrouter.ai/keys" target="_blank" style="color:#60a5fa; text-decoration:none; font-weight:bold;">OpenRouter Keys (Click tại đây)</a></li>
+        <li>Tạo một tài khoản bằng Google Account của bạn.</li>
+        <li>Tạo phím (Create Key) và sao chép dãy ký tự bắt đầu bằng <code>sk-or-v1</code>.</li>
+        <li>Dán khoá vừa nhận vào Tab <b>Cài đặt</b> bên cạnh của popup này.</li>
+      </ol>
+      <div style="background:#1e3a5f; padding:10px; border-radius:6px; color:#93c5fd; font-size:12px;">
+        Mặc định: Phân tích dùng model "Step 3.5 Flash V2" <b>hoàn toàn miễn phí</b> trên OpenRouter. Bạn không lo mất tiền thẻ tín dụng.
+      </div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-debug">
     <div class="empty" id="emptyDebug">Chưa có debug log.</div>
   </div>
