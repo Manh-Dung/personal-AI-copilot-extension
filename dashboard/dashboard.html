@@ -24,6 +24,40 @@
         </div>
       </div>
 
+      <div class="actions">
+      <button id="btnGenerate">Thủ công: Tạo Daily Insight mới</button>
+      <button id="btnGenerateWeekly" style="background-color: var(--accent2); margin-left: 8px;">Tạo Weekly Analytics (7 ngày)</button>
+    </div>
+
+    <!-- Weekly Insight Card -->
+    <div class="card" id="weeklyCard" style="display:none; border:2px solid var(--accent2); margin-top: 24px;">
+      <div class="card-header">
+        <h2 style="color:var(--accent2);"><span class="icon">📅</span> Weekly Analytics (Tổng Kết Tuần)</h2>
+        <div class="score">Trend: <span id="productivityTrend"></span></div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <h3>Top Kĩ Năng Tích Luỹ</h3>
+            <div id="weeklySkills" class="tags"></div>
+          </div>
+          <div class="stat-box">
+            <h3>Lỗ Hổng/Vấn Đề Dài Hạn</h3>
+            <p id="coreWeakness" style="color:var(--danger); font-weight:600; margin-top:8px;"></p>
+          </div>
+        </div>
+        <div class="summary-box">
+          <h3>Đánh Giá Toàn Cảnh & Kế Hoạch</h3>
+          <p id="weeklySummary"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="recapCard" style="display:none; margin-top: 24px;">
+           <!-- Chart rendered by JS -->
+        </div>
+      </div>
+
       <div class="card">
         <h2>⏱️ Thời gian tập trung theo Website</h2>
         <div id="chart-container">

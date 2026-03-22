@@ -153,6 +153,17 @@
       <hr style="border:0; border-top:1px solid var(--border); margin: 8px 0;">
       <label title="Tính bằng phút"><span style="display:inline-block; width:130px;">Chu kỳ Tóm tắt:</span> <input type="number" id="summarizeInterval" value="10" min="5" style="width:60px; background:var(--bg3); border:1px solid var(--border); color:#fff; border-radius:4px; padding:2px 4px;"> phút</label>
       <label title="Giờ AI chốt sổ hằng ngày"><span style="display:inline-block; width:130px;">Giờ chốt Daily Recap:</span> <input type="time" id="dailyRecapTime" value="23:30" style="background:var(--bg3); border:1px solid var(--border); color:#fff; border-radius:4px; padding:2px 4px;"></label>
+      <label title="Thứ chốt sổ hàng tuần"><span style="display:inline-block; width:130px;">Ngày chốt Weekly:</span>
+        <select id="weeklyRecapDay" style="background:var(--bg3); border:1px solid var(--border); color:#fff; border-radius:4px; padding:2px 4px; width:100px;">
+          <option value="1">Thứ 2</option>
+          <option value="2">Thứ 3</option>
+          <option value="3">Thứ 4</option>
+          <option value="4">Thứ 5</option>
+          <option value="5">Thứ 6</option>
+          <option value="6">Thứ 7</option>
+          <option value="0">Chủ Nhật</option>
+        </select>
+      </label>
       <label><input type="checkbox" id="chk_floating_toast" checked> Bật Toast báo cáo chớp nhoáng trên web</label>
 
       <button class="btn-save" id="saveTracking" style="margin-top:8px;">Lưu tuỳ chọn theo dõi</button>

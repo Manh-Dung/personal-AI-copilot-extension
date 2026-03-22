@@ -23,6 +23,10 @@
   - [x] UI Setting: Tuỳ chỉnh thời gian tóm tắt (min 5p), Giờ chạy Recap, Nút bật/tắt Toast.
   - [x] Xây dựng Alarm đền bù (Catch-up) cho Daily Recap nếu user offline.
   - [x] Viết hàm `showToast` trên web báo hiệu thao tác bằng Shadow DOM.
+- [/] Phase 7: Báo cáo Toàn cảnh theo Tuần (Weekly Analytics)
+  - [ ] Thêm tuỳ chọn Setting: Chọn Ngày chốt sổ hàng tuần.
+  - [ ] Add `generateWeeklyRecap` gom data 7 bản Recap ngày cho AI ngâm cứu.
+  - [ ] Tích hợp Hiển thị Weekly Insight lên UI Dashboard.
   - [x] Dashboard vẽ biểu đồ cơ bản
 - [x] Tạo file README.md mô tả dự án và cách hoạt động theo yêu cầu
 - [x] Cấu trúc lại file và folder (Refactoring) cho dễ phát triển tiếp

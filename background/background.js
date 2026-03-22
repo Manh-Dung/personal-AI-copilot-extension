@@ -52,8 +52,9 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'auto_summarize') {
     processBatch();
   } else if (alarm.name === 'check_daily') {
-    const { trackingOptions, lastRecapDate } = await storageGet(['trackingOptions', 'lastRecapDate']);
+    const { trackingOptions, lastRecapDate, lastWeeklyRecapDate } = await storageGet(['trackingOptions', 'lastRecapDate', 'lastWeeklyRecapDate']);
     const recapTime = trackingOptions?.dailyRecapTime || '23:30';
+    const weeklyDay = trackingOptions?.weeklyRecapDay !== undefined ? trackingOptions.weeklyRecapDay : 0;
     
     const d = new Date();
     const currentStr = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
@@ -64,6 +65,13 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       dbg(`⏳ Đã đến giờ rảnh rỗi / Bù giờ Recap hàng ngày (${currentStr} >= ${recapTime})`);
       await storageSet({ lastRecapDate: todayStr });
       generateDailyRecap();
+      
+      // Kiểm tra xem hôm nay có phải là ngày chốt Weekly không
+      if (d.getDay() === weeklyDay && lastWeeklyRecapDate !== todayStr) {
+         await storageSet({ lastWeeklyRecapDate: todayStr });
+         // Delay 40s để chờ Daily Recap chạy xong tránh nghẽn API
+         setTimeout(generateWeeklyRecap, 40000);
+      }
     }
   }
 });
@@ -216,6 +224,7 @@ async function saveSummary(summary, count, tags) {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'TEST_API') { testApi(); return; }
   if (msg.type === 'GENERATE_DAILY_RECAP') { generateDailyRecap(); return; }
+  if (msg.type === 'GENERATE_WEEKLY_RECAP') { generateWeeklyRecap(); return; }
 });
 
 // ==== Phase 5: Long-term Memory & Token Optimization ====
@@ -340,5 +349,77 @@ YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format 
     notify('Lỗi API', err.message);
   } finally {
     await storageSet({ is_recapizing: false });
+  }
+}
+
+// ==== Phase 7: Weekly Analytics ====
+async function generateWeeklyRecap() {
+  const d = new Date();
+  const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  
+  const allData = await storageGet(null);
+  
+  // Lấy ra tất cả recap hằng ngày
+  const dailyRecaps = Object.entries(allData)
+    .filter(([k]) => k.startsWith('recap_') && !k.startsWith('recap_weekly_'))
+    .sort((a,b) => b[1].generatedAt - a[1].generatedAt) // mới nhất trước
+    .slice(0, 7) // Chỉ lấy 7 ngày gần nhất
+    .map(([k, v]) => v);
+    
+  if (dailyRecaps.length === 0) {
+    notify('Weekly Insights', 'Không đủ dữ liệu của các ngày qua để tổng hợp tuần.');
+    return;
+  }
+  
+  const recapsText = dailyRecaps.map((r, i) => {
+    return `Ngày ${i+1}:\n- Học: ${r.skills_practiced?.join(', ')}\n- Lỗi vướng: ${r.struggles?.join(', ')}\n- Nhận xét: ${r.summary}`;
+  }).join('\n\n');
+
+  const memory = allData.long_term_memory || { strengths: [], weaknesses: [] };
+  
+  const prompt = `System Instruction:
+Bạn là một AI Mentor. Nhiệm vụ của bạn là đọc BÁO CÁO 7 NGÀY GẦN NHẤT của tôi và Bộ Não Dài Hạn để TỔNG KẾT TUẦN (Weekly Analytics).
+Hãy đưa ra 1 bức tranh toàn cảnh: Tôi đang đi đúng hướng không? Có kĩ năng nào tôi học rất tốt trong tuần này không? Có lỗ hổng nào hổng mãi không vá được không?
+
+[BỘ NÃO DÀI HẠN]
+Strengths: ${memory.strengths.join(', ')}
+Weaknesses: ${memory.weaknesses.join(', ')}
+
+[BÁO CÁO 7 NGÀY QUA]
+${recapsText}
+
+YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format như sau:
+{
+  "weekly_skills": ["Những kĩ năng nổi bật tóm gọn"],
+  "core_weakness": "Điểm yếu cốt lõi làm mất nhiều thời gian nhất tuần qua",
+  "summary": "Đánh giá chi tiết (khắt khe) toàn cảnh tuần, chỉ ra xu hướng (tốt lên hay lặp lại lỗi cũ). Đề xuất mục tiêu CỤ THỂ cho tuần tới.",
+  "productivity_trend": "Tăng / Giảm / Đi ngang"
+}`;
+
+  await storageSet({ is_weekly_recapizing: true });
+  notify('AI Copilot', 'Đang nghiền ngẫm dữ liệu 7 ngày qua để chốt sổ Tuần...');
+  
+  try {
+    const { apiKey } = await storageGet(['apiKey']);
+    if (!apiKey) return;
+    
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: OR_MODEL, messages: [{ role: 'user', content: prompt }] })
+    });
+    
+    const data = await res.json();
+    let textResult = data.choices?.[0]?.message?.content || "";
+    textResult = textResult.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    const parsed = JSON.parse(textResult);
+    parsed.generatedAt = Date.now();
+    await storageSet({ [`recap_weekly_${dateStr}`]: parsed });
+    notify('AI Copilot', 'Đã chốt sổ Weekly Insight thành công!');
+  } catch (err) {
+    notify('Lỗi API Weekly', err.message);
+  } finally {
+    await storageSet({ is_weekly_recapizing: false });
   }
 }

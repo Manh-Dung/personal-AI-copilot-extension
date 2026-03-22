@@ -29,6 +29,7 @@ const chkPage = document.getElementById('chk_page');
 
 const summarizeIntervalInp = document.getElementById('summarizeInterval');
 const dailyRecapTimeInp = document.getElementById('dailyRecapTime');
+const weeklyRecapDaySel = document.getElementById('weeklyRecapDay');
 const chkFloatingToast = document.getElementById('chk_floating_toast');
 
 const saveTrackingBtn = document.getElementById('saveTracking');
@@ -62,7 +63,7 @@ function loadAll(cb) {
       history:        all.history || [],
       apiKey:         all.apiKey || '',
       customPrompt:   all.customPrompt || '',
-      trackingOptions: all.trackingOptions || { sent:true, draft:true, copy:true, click:true, ai:true, page:true, floatingToast:true, summarizeInterval:10, dailyRecapTime:'08:00' },
+      trackingOptions: all.trackingOptions || { sent:true, draft:true, copy:true, click:true, ai:true, page:true, floatingToast:true, summarizeInterval:10, dailyRecapTime:'08:00', weeklyRecapDay:0 },
       keystrokeCount: all.keystrokeCount || 0,
       is_summarizing: all.is_summarizing || false
     });
@@ -90,6 +91,9 @@ loadAll((data) => {
     }
     if (data.trackingOptions.dailyRecapTime) {
       dailyRecapTimeInp.value = data.trackingOptions.dailyRecapTime;
+    }
+    if (data.trackingOptions.weeklyRecapDay !== undefined) {
+      weeklyRecapDaySel.value = data.trackingOptions.weeklyRecapDay;
     }
   }
   updateApiStatus(data.apiKey);
@@ -135,7 +139,8 @@ saveTrackingBtn.addEventListener('click', () => {
     ai: chkAi.checked, page: chkPage.checked,
     floatingToast: chkFloatingToast.checked,
     summarizeInterval: interval,
-    dailyRecapTime: dailyRecapTimeInp.value
+    dailyRecapTime: dailyRecapTimeInp.value,
+    weeklyRecapDay: parseInt(weeklyRecapDaySel.value, 10) || 0
   };
   chrome.storage.local.set({ trackingOptions: opts }, () => {
     alert('Đã lưu! ' + (opts.summarizeInterval !== 10 ? 'Chu kỳ tóm tắt có thể cần bạn tải lại trang web để áp dụng.' : ''));
