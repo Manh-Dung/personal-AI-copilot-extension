@@ -179,7 +179,83 @@ async function saveSummary(summary, count, tags) {
   await storageSet({ history });
 }
 
-// ---- Message handler (chỉ TEST_API) ----
+// ---- Message handler ----
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'TEST_API') { testApi(); return; }
+  if (msg.type === 'GENERATE_DAILY_RECAP') { generateDailyRecap(); return; }
 });
+
+// ---- Daily Recap Engine (Phase 2) ----
+async function generateDailyRecap() {
+  const d = new Date();
+  const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  
+  const allData = await storageGet(null);
+  const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  
+  const todayLogs = Object.values(allData).filter(item => item.time >= startOfDay && item.status);
+  const todayTimes = Object.entries(allData).filter(([k]) => k.startsWith(`active_${dateStr}`));
+  
+  if (!todayLogs.length && !todayTimes.length) {
+    notify('Daily Insights', 'Chưa có hoạt động nào hôm nay để phân tích.');
+    return;
+  }
+  
+  let activitiesText = todayTimes.map(([k, v]) => {
+    const domain = k.split('_').slice(2).join('_');
+    return `- ${domain}: ${Math.round(v.timeMs/60000)} phút, ${v.keystrokes} phím gõ`;
+  }).join('\n');
+  
+  let logsText = todayLogs.map(m => {
+    return `- [${new Date(m.time).toLocaleTimeString('vi-VN')}] ${m.status}: ${m.text.slice(0, 150)}`;
+  }).join('\n');
+  if(logsText.length > 5000) logsText = logsText.slice(0, 5000) + '... (cắt bớt)';
+  
+  const prompt = `System Instruction:
+Bạn là một AI Mentor cá nhân xuất sắc về phương pháp học tập. Nhiệm vụ của bạn là phân tích dữ liệu hành vi trượt web, tìm kiếm, gõ code của tôi hôm nay để nhận diện điểm mạnh và lỗ hổng kiến thức.
+DỮ LIỆU THỜI GIAN THEO DOMAIN (Tính độ tập trung):
+${activitiesText}
+
+CHI TIẾT LOG SỰ KIỆN (Nội dung đã đọc, search, copy):
+${logsText}
+
+YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format chuẩn hoá:
+{
+  "skills_practiced": ["Tên kĩ năng/công cụ 1"],
+  "struggles": ["Khái niệm/Lỗi đang bị mắc kẹt 1"],
+  "productivity_score": 8,
+  "summary": "Nhận xét chi tiết (3-4 câu) chỉ ra chính xác mình đang yếu, đang kẹt ở tư duy nào và đưa ra lời khuyên thực chiến ngày mai dựa trên Kỹ Thuật Feynman hoặc Reverse Engineering thay vì cày Tutorial.",
+  "best_hours": "khoảng thời gian tập trung nhất"
+}`;
+
+  await storageSet({ is_recapizing: true });
+  notify('AI Copilot', 'Đang nghiền ngẫm hoạt động ngày hôm nay của bạn...');
+  try {
+    const { apiKey } = await storageGet(['apiKey']);
+    if (!apiKey) { notify('Lỗi', 'Chưa cấu hình API Key!'); return; }
+    
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: OR_MODEL, messages: [{ role: 'user', content: prompt }] })
+    });
+    
+    const data = await res.json();
+    let textResult = data.choices?.[0]?.message?.content || "";
+    textResult = textResult.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    try {
+      const parsed = JSON.parse(textResult);
+      parsed.generatedAt = Date.now();
+      await storageSet({ [`recap_${dateStr}`]: parsed });
+      notify('AI Copilot', 'Đã phân tích xong Insight trong ngày!');
+    } catch(e) {
+      dbg('JSON Parse lỗi của Recap AI: ' + textResult);
+      notify('Lỗi phân tích', 'AI trả về định dạng sai.');
+    }
+  } catch (err) {
+    notify('Lỗi API', err.message);
+  } finally {
+    await storageSet({ is_recapizing: false });
+  }
+}

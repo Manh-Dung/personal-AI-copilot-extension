@@ -1,14 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
   chrome.storage.local.get(null, (allData) => {
     const timeData = Object.entries(allData)
       .filter(([k]) => k.startsWith('active_'))
       .map(([k, v]) => {
-          const parts = k.split('_'); // [0]=active, [1]=2026-03-22, [2]=domain
+          const parts = k.split('_');
           return { date: parts[1], domain: parts.slice(2).join('_'), ...v };
       });
-      
+
     renderChart(timeData);
+
+    // Phase 2: Render Daily Recap
+    renderRecap(allData[`recap_${dateStr}`], allData.is_recapizing);
   });
+
+  document.getElementById('btnGenerateRecap').addEventListener('click', () => {
+     chrome.runtime.sendMessage({ type: 'GENERATE_DAILY_RECAP' });
+     const btn = document.getElementById('btnGenerateRecap');
+     btn.disabled = true;
+     btn.textContent = 'Đang phân tích... (Xem AI Pushed)';
+  });
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local') {
+    const d = new Date();
+    const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    if (changes[`recap_${dateStr}`] || changes.is_recapizing) {
+       chrome.storage.local.get([`recap_${dateStr}`, 'is_recapizing'], (res) => {
+           renderRecap(res[`recap_${dateStr}`], res.is_recapizing);
+       });
+    }
+  }
 });
 
 function renderChart(data) {

@@ -78,3 +78,24 @@ p {
   color: #888;
   margin-top: 2px;
 }
+.btn-dashboard {
+  background: #3b2d4a; border: 1px solid #c084fc; color: #dac3fb;
+  padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; font-weight: 600; transition: 0.2s;
+}
+.btn-dashboard:hover { background: #4b3663; }
+.btn-dashboard:disabled { opacity: 0.5; cursor: not-allowed; }
+.insight-box {
+  background: #251e33;
+  border-left: 4px solid #c084fc;
+  padding: 16px; border-radius: 4px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;
+  font-size: 14px; line-height: 1.6; color: #eedbff;
+  margin-top: 10px;
+}
+.tag-badge {
+  display: inline-block; background: #c084fc22; color: #c084fc;
+  border: 1px solid #c084fc55; padding: 2px 8px; border-radius: 12px;
+  font-size: 11px; margin-right: 6px; margin-bottom: 6px;
+}
+.struggle-badge { border-color: #f8717155; color: #f87171; background: #f8717111; }
+
