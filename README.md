@@ -1,35 +1,57 @@
 # 🧠 CogniTrail: Personal AI Mentor (Browser Extension)
-*Trợ lý ảo cá nhân thấu hiểu thói quen, được nâng cấp từ nền tảng "AI Chat Summarizer".*
+*Trợ lý ảo cá nhân thấu hiểu thói quen, được nâng cấp và lột xác hoàn toàn từ nền tảng "AI Chat Summarizer".*
 
-## 💡 Triết Lý Cốt Lõi
-Extension này không chỉ dùng để tóm tắt các đoạn chat nhảm nhí hay nhật ký truy cập mạng. Nó là một **Hệ Thống Động (Dynamic Feedback Loop System)** được thiết kế để giải quyết "khoảng trống nhận thức", theo dõi "thói quen tâm lý" và "vận hành" quá trình phát triển của bạn thông qua 3 trục:
-
-1. **Trục Nhận thức (Khoảng trống kiến thức):** Bằng cách ghi lại những từ khoá bạn hay tìm kiếm, những lỗi (bugs) khiến bạn dừng lại trên StackOverflow quá lâu, AI sẽ nhận diện lỗ hổng kiến thức để lưa ra nhắc nhở lấp đày. Bỏ qua việc lan man đọc Tutorial dài từ con số không, tập trung học bằng Reverse Engineering.
-2. **Trục Hành vi & Tâm lý (Tính cách):** Hệ thống ghi lại lịch sử phím gõ, lịch sử chuột nhấp, và sự tập trung theo tên miền (Focus Tracking). Nếu bạn là người nghi ngờ/hay thắc mắc -> hệ thống gợi nhắc **Kỹ thuật Feynman**. Nếu bạn là người thực dụng ngắn hạn (Short-attention) -> hệ thống đề xuất **Micro-learning** (cắt ngang chuỗi đọc lý thuyết dài để thay bằng việc thực thi thử nghiệm).
-3. **Trục Vận hành (Vòng lặp Đầu vào - Output - Debug):** Lọc nhiễu -> Thực chiến -> Tối ưu lại. Background worker của Chrome Extensioh tự động phân tích mỗi 10 phút, tổng hợp cuối ngày nhằm biến một Extension thụ động thành 1 AI Mentor trực quan qua Bảng thống kê (Dashboard).
+Khác với các công cụ theo dõi thời gian (Time Tracker) thông thường vốn nông cạn và dễ bị đánh lừa, **CogniTrail** là một **Hệ Thống Phản Hồi Động (Dynamic Feedback Loop System)**. Nó hoạt động như một vị Cố vấn (Mentor) khắt khe ngay trên trình duyệt, sẵn sàng "bắt bài" sự lười biếng, vạch trần các lỗ hổng kiến thức và ép bạn học đúng phương pháp.
 
 ---
 
-## 🚀 Các Tính Năng Hiện Tại (Phase 1)
-- [x] **Event Logger Đa Giác Quan:** Ngầm ghi nhận các sự kiện quan trọng trong ngày: tin nhắn nháp (Draft), tin nhắn gửi (Sent), nhấp chọn AI gợi ý (Click-suggest), nội dung copy, và văn bản dài bạn đã đọc (Visited Page Context).
-- [x] **Focus Time Tracking:** Tính năng đếm giờ làm việc hiệu quả dựa vào thao tác thực sự (`keydown`, `mousemove`, `scroll`). Bỏ qua thời gian bạn treo tab không làm gì qua cơ chế Idle Detection.
-- [x] **AI Dashboard:** Thống kê trực quan lại bằng biểu đồ các website mà bạn tập trung cao độ nhất (ví dụ Code Playground, Github, IDE Platform). Đánh dấu rõ những phiên làm việc bạn gõ phím bao nhiêu lần trên các trang đó để tối ưu hoá "Khung giờ vàng".
-- [x] **Local AI Prompt:** Thoải mái tự điền API Key (OpenRouter/OpenAI/Claude) và tuỳ biến System Prompt. Không thu thập dữ liệu về server ngoài, hoàn toàn mã nguồn mở và cục bộ trình duyệt.
+## 🎯 Điểm Đột Phá: AI Đọc "Dấu Vết Nhận Thức" (Cognitive Trails)
+
+CogniTrail không quan tâm bạn nhắn bao nhiêu câu chat, nó quan tâm đến **Cách bạn giải quyết vấn đề**. AI (thông qua LLM) được huấn luyện để mổ xẻ logs của bạn theo **4 Trục Nhận Thức**:
+
+1. **Sự tiến hóa câu hỏi:** Nhận diện việc bạn đang hỏi ở mức `HOW` (tay ngang, copy/paste) hay đã nâng cấp lên `WHY` (hỏi bản chất) và `SCALE` (tư duy cấu trúc).
+2. **Tần suất lặp lỗi:** Bạn vướng lại một concept (VD: state management) ở nhiều dự án? AI lập tức tống nó vào rổ `Weaknesses` (Điểm yếu cốt lõi).
+3. **Tỷ lệ phụ thuộc (Dependency Ratio):** Quăng cả ngàn dòng code cho AI sửa giúp? AI sẽ đánh giá bạn "Quá lệ thuộc" và ép bạn học kỹ năng **Divide & Conquer** (Chia để trị).
+4. **Tư duy Refactor:** Phân biệt rõ việc bạn giải quyết xong vấn đề thật sự, hay chỉ lượm lặt **Workaround** (sửa chắp vá ép code chạy tạm).
 
 ---
 
-## 🛠️ Hướng Rẽ Công Nghệ & Tương Lai (Phase 2 & 3)
-* **Weekly/Daily Growth Snapshot:** Job chạy ngầm cuối ngày tự báo cáo với AI (VD: "*Hôm nay bạn tập trung phần lớn vào JavaScript nhưng thấy bạn kẹt ở hàm Async rất nhiều. Dấu hiệu là copy paste lặp lại.*").
-* **In-screen Intervention:** Pop-up nhắc nhở ngay màn hình: *"Đừng đọc nữa, mở tab code ra bấm console.log nghiệm chứng đi!"*
+## 🚀 Các Tính Năng Đỉnh Cao (v1.7.0)
 
-## 📦 Cài Đặt (Local Install)
-1. Kéo mã nguồn về thư mục cục bộ (`git clone...`).
-2. Truy cập thanh url `chrome://extensions/` - bật `Developer mode` ở góc phải trên.
-3. Bấm **Load unpacked**, trỏ folder chứa các files này.
-4. (Bắt buộc) Click biểu tượng Extension -> Mở tab `Cài đặt` -> Nhập OpenRouter API Key để cấp não cho AI.
+### 1. ⌨️ Mắt thần đo lường làm việc thực tế (Keystrokes & Active Focus)
+* **Bắt bệnh Tutorial Hell:** Nếu bạn ngâm mình trên trang ReactJS Docs hơn 5 phút nhưng **số phím gõ bằng 0**, AI hiểu bạn chỉ đang đọc chay và lặn ngụp trong mớ lý thuyết. Nó lập tức gợi ý bạn mở IDE lên thực hành.
+* **Đo lường Active Time:** Loại bỏ hoàn toàn thời gian bạn treo máy (Idle) hoặc đi vệ sinh. Chỉ tính giây nào chuột lăn, phím gõ. Giúp bạn tìm ra "Best Hours" (Khung giờ vàng năng suất nhất) trong ngày.
 
-## 🤝 Quyền Lợi Sử Dụng (Permissions)
-- `activeTab` & `scripting`: Để chèn logic đếm thời gian và bắt event DOM vào trang thái hoạt động.
-- `storage`: Lưu tạm lịch sử hoạt động vào local Chrome (sẽ xoá cronjob tự động sau 10s đối với trùng lặp và clear bớt log cũ).
-- `alarms`: Đánh thức background worker tự đi tóm tắt & tính toán (để không tốn RAM chạy ngầm liên tục). 
-- `notifications`: Đẩy tin nhắn Notification động viên/vòng lặp phản hồi ra màng hình Desktop.
+### 2. ⚡ Real-time Mentor Intervention (Nhắc nhở tức thời bằng Shadow DOM)
+AI can thiệp trực tiếp vào màn hình web của bạn bằng các Popup xịn xò (kháng CSS website):
+* **Bẫy Học Vẹt:** Nếu bạn bôi đen và nhấn Copy đoạn code `> 3 lần` trong vòng `3 phút` trên StackOverflow, hệ thống cảnh báo và ép bạn dùng **Feynman Technique** (Viết lại logic bằng ngôn ngữ của riêng bạn).
+* **Bẫy Áp Lực Lý Thuyết:** Nếu ngồi đọc Docs quá lâu mà không gõ code, Mentor sẽ yêu cầu bạn dùng **Reverse Engineering** (Tải source mẫu về đập đi xây lại).
+
+### 3. 📅 Daily & Weekly Analytics (Long-term Knowledge Graph)
+Không tóm tắt lắt nhắt, CogniTrail gom dữ liệu để tổng kết vào lúc bạn rảnh rỗi.
+* **Daily Insight:** Chốt sổ mỗi đêm (ví dụ 23:30). Chỉ ra Kỹ năng nạp được hôm nay, Lỗ hổng hớ hênh nhất và Lời khuyên cho ngày mai.
+* **Weekly Analytics:** Tổng kết 7 bản Daily Recap. Báo cáo "Trend Năng Suất" và những bài học mang tính nền tảng.
+* **Bộ não trượt (Sliding Window Memory):** AI có trí nhớ dài hạn. Lỗi nào bạn mắc tuần trước nhưng tuần này hết bị, AI tự động chuyển từ `Weakness` sang `Mastered` và chúc mừng bạn.
+
+### 4. 🎛 Tối ưu Token LLM & Quản trị Dữ liệu Gọn gàng
+* **Context Window Compression:** Extension tự động nén log, cắt chuỗi dài >100 ký tự và chỉ gửi tối đa 80 hành động gần nhất tới AI API. Vừa đủ context, vừa siêu tiết kiệm Token (chạy chi phí api rất rẻ).
+* **Quản trị Data File:** Khả năng Import và Export toàn bộ cấu trúc dữ liệu JSON để bạn mang sang máy khác học tiếp.
+* **Log Filter UI:** Xóa và lọc trực tiếp từng thao tác rác không muốn AI ngó qua trong Tab Quản trị.
+
+---
+
+## 📦 Hướng Dẫn Cài Đặt (Local Install)
+
+1. Kéo mã nguồn về máy tính (`git clone`).
+2. Mở trình duyệt Chrome, gõ `chrome://extensions/` và bật chế độ **Developer mode** ở góc phải trên.
+3. Bấm **Load unpacked**, trỏ folder tìm đến thư mục dự án này.
+4. Mở Popup extension, chọn Tab **🔑 Cài API** để lấy khoá OpenRouter hoàn toàn miễn phí (được hướng dẫn chi tiết tận tình trong đó).
+
+## 🤝 Quyền Lợi Cấp Cho Extension (Permissions)
+- `activeTab` & `scripting`: Xuyên tẩu vào trang web để bơm Popup Shadow DOM và đếm số phím gõ.
+- `storage`: Lưu tạm lịch sử hoạt động vào local Chrome (Hoàn toàn mã nguồn mở, không có server thu thập trộm).
+- `alarms`: Xử lý ngầm theo chu kỳ giờ bạn thiết lập, tính toán Catch-up khi bạn lỡ offline, không tốn tài nguyên RAM. 
+- `notifications`: Đẩy tin nhắn báo việc kết thúc tác vụ Recap hoặc AI trả về kĩ năng mới.
+
+---
+*Vì một hành trình trở thành Kỹ sư phần mềm thay vì vị trí Xếp hình Code (Stack Overflow Copy-paster).*
