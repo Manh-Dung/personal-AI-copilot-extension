@@ -192,6 +192,8 @@ function saveDomainTimeInfo() {
   if (!IS_MAIN) return; // Chỉ tính active time ở main frame để tránh đội thời gian từ iframe
   if (!activeTimeMs && !domainKeystrokes) return;
   
+  checkIntervention('time'); // Phase 3: Kiểm tra hành vi ngâm docs quá lâu
+
   const d = new Date();
   const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   const h = host();
@@ -334,6 +336,81 @@ function handleCopy() {
   const entry = { text, status: 'copied', trigger: 'copy', time: Date.now(), url: location.hostname, summarized: false };
   writeLog(entry, true);
   pruneOld();
+  
+  checkIntervention('copy'); // Phase 3
+}
+
+// ==== Phase 3: REAL-TIME MENTOR INTERVENTION ====
+let pageCopies = 0;
+let copyResetTimer = null;
+let interventionShown = false;
+
+function checkIntervention(triggerType) {
+  if (interventionShown || !IS_MAIN) return;
+
+  if (triggerType === 'copy') {
+    pageCopies++;
+    clearTimeout(copyResetTimer);
+    copyResetTimer = setTimeout(() => { pageCopies = 0; }, 180000); // Reset sau 3 phút
+    if (pageCopies >= 3) {
+      showMentorPopup(
+        '⚠️ Dấu hiệu Học vẹt', 
+        'Bạn đang sao chép code liên tục 3 lần trong thời gian ngắn.<br>Hãy dừng lại 1 phút dùng <b>Kỹ thuật Feynman</b>: Tự giải thích 3 dòng code bạn vừa copy xem nó xử lý vấn đề gì trước khi dán vào IDE!',
+        'feynman'
+      );
+      pageCopies = 0;
+    }
+  } else if (triggerType === 'time') {
+    // Nếu activeTimeMs > 5 phút (300k ms) & phím gõ <= 15
+    if (activeTimeMs > 300000 && domainKeystrokes <= 15) {
+      const isDoc = window.location.hostname.includes('docs') || window.location.hostname.includes('stackoverflow') || window.location.hostname.includes('github') || window.location.hostname.includes('medium');
+      if (isDoc) {
+        showMentorPopup(
+          '💡 Thử Nghiệm Thực Tế',
+          'Bạn đang ngâm một tài liệu khá lâu mà không gõ phím. Đừng vướng bẫy Tutorial!<br>Hãy <b>Reverse Engineering</b>: Tải repo/code chạy thử và sửa tham số xem điều gì gãy thay vì tiếp tục đọc.',
+          'reverse'
+        );
+      }
+    }
+  }
+}
+
+function showMentorPopup(title, msg, type) {
+  interventionShown = true;
+  const host = document.createElement('div');
+  Object.assign(host.style, { position: 'fixed', bottom: '20px', right: '20px', zIndex: '2147483647' });
+  document.documentElement.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: 'open' });
+  shadow.innerHTML = `
+    <style>
+      .ais-mentor {
+        background: #1a1525; border-left: 4px solid ${type === 'feynman' ? '#f87171' : '#c084fc'};
+        color: #eedbff; font-family: -apple-system, sans-serif; padding: 16px; border-radius: 6px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px;
+        transform: translateX(350px); opacity: 0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .ais-mentor.show { transform: translateX(0); opacity: 1; }
+      .ais-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; display: flex; align-items:center; justify-content:space-between; }
+      .ais-msg { font-size: 13px; line-height: 1.5; color: #d1d5db; }
+      .ais-close { cursor: pointer; color: #888; font-size: 18px; font-weight: bold; background:none; border:none; padding:0; outline:none; }
+      .ais-close:hover { color: #fff; }
+      b { color: #fff; }
+    </style>
+    <div class="ais-mentor">
+      <div class="ais-title"><span>${title}</span><button class="ais-close" id="btn-close">&times;</button></div>
+      <div class="ais-msg">${msg}</div>
+    </div>
+  `;
+  
+  setTimeout(() => shadow.querySelector('.ais-mentor').classList.add('show'), 100);
+  
+  const cls = () => {
+    shadow.querySelector('.ais-mentor').classList.remove('show');
+    setTimeout(() => host.remove(), 500);
+  };
+  shadow.getElementById('btn-close').onclick = cls;
+  setTimeout(() => { if (host.isConnected) cls(); }, 20000); // 20s tự tắt
 }
 
 // ---- Thấu hiểu điều bạn thấy (Capture Page Context) ----
