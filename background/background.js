@@ -24,15 +24,48 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
-// ---- Đăng ký alarm định kỳ 10 phút ----
-chrome.alarms.get(ALARM_NAME, (existing) => {
-  if (!existing) {
-    chrome.alarms.create('auto_summarize', { periodInMinutes: 10 });
+// ---- Đăng ký alarm định kỳ theo Settings của User ----
+chrome.storage.local.get(['trackingOptions'], (res) => {
+  const interval = res.trackingOptions?.summarizeInterval || 10;
+  chrome.alarms.get('auto_summarize', (existing) => {
+    if (!existing) {
+      chrome.alarms.create('auto_summarize', { periodInMinutes: interval });
+    }
+  });
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.trackingOptions) {
+    const oldVal = changes.trackingOptions.oldValue?.summarizeInterval || 10;
+    const newVal = changes.trackingOptions.newValue?.summarizeInterval || 10;
+    if (oldVal !== newVal) {
+       chrome.alarms.create('auto_summarize', { periodInMinutes: newVal });
+       dbg(`🔄 Đổi chu kỳ tóm tắt thành ${newVal} phút`);
+    }
   }
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'auto_summarize') processBatch();
+// Alarm 1 phút để kiểm tra Giờ chốt sổ recap hoặc "Đền bù" (catch-up) nếu user offline lúc đến giờ
+chrome.alarms.create('check_daily', { periodInMinutes: 1 });
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'auto_summarize') {
+    processBatch();
+  } else if (alarm.name === 'check_daily') {
+    const { trackingOptions, lastRecapDate } = await storageGet(['trackingOptions', 'lastRecapDate']);
+    const recapTime = trackingOptions?.dailyRecapTime || '23:30';
+    
+    const d = new Date();
+    const currentStr = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    const todayStr = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    
+    // Nếu hôm nay chưa có recap, và giờ hiện tại >= giờ setup (bù giờ)
+    if (lastRecapDate !== todayStr && currentStr >= recapTime) {
+      dbg(`⏳ Đã đến giờ rảnh rỗi / Bù giờ Recap hàng ngày (${currentStr} >= ${recapTime})`);
+      await storageSet({ lastRecapDate: todayStr });
+      generateDailyRecap();
+    }
+  }
 });
 
 // ---- Xử lý batch ----

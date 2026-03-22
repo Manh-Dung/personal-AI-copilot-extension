@@ -38,9 +38,9 @@ let draftKey       = null;
 const attachedRoots  = new WeakSet();
 const capturedEls    = new WeakSet();
 
-let trackingOpts = { sent: true, draft: true, copy: true, click: true, ai: true, page: true };
+let trackingOpts = { sent: true, draft: true, copy: true, click: true, ai: true, page: true, floatingToast: true };
 chrome.storage.local.get(['trackingOptions'], (res) => {
-  if (res.trackingOptions) trackingOpts = res.trackingOptions;
+  if (res.trackingOptions) trackingOpts = {...trackingOpts, ...res.trackingOptions};
 });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.trackingOptions) {
@@ -146,6 +146,7 @@ function saveSent(text, trigger) {
   pruneOld();
   lastDraftText = '';
   dbg(`📤 SENT [${trigger}]: "${text.slice(0, 50)}"`);
+  showToast('📤 Đã ghi nhận chat: ' + text.slice(0, 30) + '...');
 }
 
 // ---- Draft ----
@@ -301,6 +302,7 @@ function processAILive(el, isInitialLoad = false) {
     aiCapturedText.set(el, finalText);
     dbg(`🤖 AI Response hoàn chỉnh (${finalText.length}c)`);
     writeLog({ text: finalText, status: 'ai-response', trigger: 'screen', time: Date.now(), url: location.hostname, summarized: false }, true);
+    showToast('🤖 AI phản hồi: ' + finalText.slice(0, 30) + '...');
   }, 3500);
 
   aiTimers.set(el, timer);
@@ -337,7 +339,29 @@ function handleCopy() {
   writeLog(entry, true);
   pruneOld();
   
+  showToast('📋 Copied: ' + text.slice(0, 30) + '...');
   checkIntervention('copy'); // Phase 3
+}
+
+// ==== UI TOAST ====
+function showToast(msg) {
+  if (!trackingOpts.floatingToast || !IS_MAIN) return;
+  const host = document.createElement('div');
+  Object.assign(host.style, { position: 'fixed', top: '20px', right: '20px', zIndex: '2147483647', pointerEvents: 'none' });
+  document.documentElement.appendChild(host);
+  const shadow = host.attachShadow({ mode: 'open' });
+  shadow.innerHTML = `
+    <style>
+      .ais-toast { background: rgba(15,15,20,0.95); border-left: 3px solid #3b82f6; color: #fff; padding: 10px 16px; border-radius: 4px; font-family: -apple-system, sans-serif; font-size: 13px; transform: translateX(120%); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+      .ais-toast.show { transform: translateX(0); opacity: 1; }
+    </style>
+    <div class="ais-toast">${msg}</div>
+  `;
+  setTimeout(() => shadow.querySelector('.ais-toast').classList.add('show'), 50);
+  setTimeout(() => {
+    shadow.querySelector('.ais-toast').classList.remove('show');
+    setTimeout(() => host.remove(), 500);
+  }, 3000);
 }
 
 // ==== Phase 3: REAL-TIME MENTOR INTERVENTION ====

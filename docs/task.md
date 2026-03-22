@@ -17,7 +17,12 @@
 - [x] Phase 5: Tối Ưu Context Window & Bộ Nhớ Dài Hạn AI
   - [x] Nén Token trước khi gửi OpenRouter
   - [x] Suy luận vấn đề đã được giải quyết (Inferred Resolution)
-  - [x] Sinh Long-Term Knowledge Graph (điểm yếu, điểm mạnh, nhắc nhở))
+  - [x] Sinh Long-Term Knowledge Graph (điểm yếu, điểm mạnh, nhắc nhở)
+- [x] Phase 6: Settings Lập Lịch Tự Động & Shadow DOM Toast
+  - [x] Nâng version lên v1.7.0 và ghi Changelog
+  - [x] UI Setting: Tuỳ chỉnh thời gian tóm tắt (min 5p), Giờ chạy Recap, Nút bật/tắt Toast.
+  - [x] Xây dựng Alarm đền bù (Catch-up) cho Daily Recap nếu user offline.
+  - [x] Viết hàm `showToast` trên web báo hiệu thao tác bằng Shadow DOM.
   - [x] Dashboard vẽ biểu đồ cơ bản
 - [x] Tạo file README.md mô tả dự án và cách hoạt động theo yêu cầu
 - [x] Cấu trúc lại file và folder (Refactoring) cho dễ phát triển tiếp

@@ -4,6 +4,12 @@ Tất cả những thay đổi nổi bật của dự án **AI Chat Summarizer**
 
 Hiển thị theo định dạng Semantic Versioning.
 
+## [1.7.0] - Chuẩn bị Ra Mắt (Scheduling & UI Toast)
+### Thêm mới (Added)
+- **Time Setup:** Tuỳ chọn cài đặt mức thời gian gom cụm tóm tắt (Mặc định 10 phút, Min 5 phút, Max vô hạn).
+- **Daily Notification Catch-up:** Cài đặt giờ hẹn hằng ngày chốt Daily Recap. Nếu lúc đó bạn đi vắng hoặc tắt máy, AI sẽ đền bù ngay khi bạn đăng nhập trực tuyến trở lại.
+- **Universal Floating Toast:** Mở rộng việc nhắc nhở bằng Shadow DOM cho TOÀN BỘ các hành động (Đã Gửi, Đã Copy, Text AI Pushed) để bạn dễ nhận biết AI đang hoạt động ngầm. Kèm lựa chọn Bật/Tắt hiển thị Toast này.
+
 ## [1.6.0] - 2026-03-22 (The "AI Mentor" Evolution)
 Thực hiện quá trình "Lột xác" công cụ từ một Extension tự động ghi chép log trò chuyện đơn thuần trở thành một Người cố vấn (Tutor ảo) bám sát các luồng nhận thức và thói quen làm việc thực tế.
 

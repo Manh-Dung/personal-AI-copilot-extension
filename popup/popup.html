@@ -148,8 +148,13 @@
         <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_copy" style="margin-right:4px;"> Copy văn bản</label>
         <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_click" style="margin-right:4px;"> Click & Gợi ý</label>
         <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_ai" style="margin-right:4px;"> Phản hồi từ AI</label>
-        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_page" style="margin-right:4px;"> Xem trang web</label>
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_page" style="margin-right:4px;"> Lịch sử đọc trang</label>
       </div>
+      <hr style="border:0; border-top:1px solid var(--border); margin: 8px 0;">
+      <label title="Tính bằng phút"><span style="display:inline-block; width:130px;">Chu kỳ Tóm tắt:</span> <input type="number" id="summarizeInterval" value="10" min="5" style="width:60px; background:var(--bg3); border:1px solid var(--border); color:#fff; border-radius:4px; padding:2px 4px;"> phút</label>
+      <label title="Giờ AI chốt sổ hằng ngày"><span style="display:inline-block; width:130px;">Giờ chốt Daily Recap:</span> <input type="time" id="dailyRecapTime" value="23:30" style="background:var(--bg3); border:1px solid var(--border); color:#fff; border-radius:4px; padding:2px 4px;"></label>
+      <label><input type="checkbox" id="chk_floating_toast" checked> Bật Toast báo cáo chớp nhoáng trên web</label>
+
       <button class="btn-save" id="saveTracking" style="margin-top:8px;">Lưu tuỳ chọn theo dõi</button>
     </div>
     <div class="settings-group" style="border-bottom:none; padding-bottom:16px;">
