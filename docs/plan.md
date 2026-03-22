@@ -59,9 +59,14 @@ Không chỉ tóm tắt từng đoạn chat, chúng ta cần một cơ chế **E
 - **Cách AI tối ưu Token:**
   - *Context Window Compression*: Không gửi nguyên văn (Raw String) hàng nghìn dòng. Sẽ cắt tỉa/rút gọn text.
   - *Sliding Window Memory*: Tạo 1 biến lưu trữ `long_term_memory`. Thay vì phân tích lại từ đầu mỗi ngày, AI lấy phân tích ngày hôm qua (đã tóm gọn) + raw data hôm nay = Phân tích ngày mới.
-- **Cơ chế Suy Luận Vòng Lặp Học Tập:**
-  - *Inferred Resolution (Mặc định giải quyết)*: Nếu AI phát hiện 1 chùm câu hỏi liên tiếp về 1 lỗi, sau đó user đi copy code nơi khác và không hỏi nữa -> Đánh dấu là đã vượt qua bug đó.
-  - *Knowledge Graph Mapping*: JSON đầu ra của AI cập nhật thêm biến `mastered` và `current_weaknesses`. Nếu điểm yếu bị giam > 3 ngày -> Nhắc nhở.
+- **Cơ chế Suy Luận Vòng Lặp Học Tập (Cognitive Trails):**
+  - AI không được phép đánh giá User "đã hiểu" chỉ vì họ ngừng tra cứu một lỗi.
+  - Phân tích độ sâu qua 4 trục Dấu vết Nhận thức:
+    1. *Tiến hoá câu hỏi:* Đi từ How (thợ gõ) -> Why/Which (Bản chất) -> Design/Scale (Làm chủ).
+    2. *Tần suất lặp lỗi:* Bắt bài việc lặp lại một mẫu lỗi ở nhiều project khác nhau.
+    3. *Dependency Ratio:* Đánh giá qua việc quăng raw file dài hay tự bóc tách logic.
+    4. *Tư duy Refactor:* Hỏi cách làm code DRY/SOLID sẽ được tính là Mastered. Dùng Workaround để ép chạy tạm tính là Weakness.
+  - *Knowledge Graph Mapping:* JSON đầu ra cập nhật điểm yếu vào bộ não AI. Nhắc nhở nếu đâm đầu lại vào Workaround.
 
 ## Lời kết
 
