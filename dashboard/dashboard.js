@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
       weeklyCard.style.display = 'none';
     }
 
+    renderEnglishLocker(data);
     renderChart(data);
   });
 
@@ -178,4 +179,63 @@ function renderChart(allData) {
     `;
     container.appendChild(row);
   });
+}
+
+// ==== Phase 8: English Locker ====
+function renderEnglishLocker(allData) {
+  const lockerCard = document.getElementById('englishLockerCard');
+  if (!lockerCard) return;
+
+  const vocabList = document.getElementById('vocabList');
+  const grammarList = document.getElementById('grammarList');
+  
+  const vocabs = allData.english_vocab || [];
+  
+  // Thu thập grammar từ tất cả recaps (nóng hổi nhất xếp trên)
+  let allCorrections = [];
+  Object.keys(allData).filter(k => k.startsWith('recap_') && !k.startsWith('recap_weekly_'))
+    .sort((a,b) => allData[b].generatedAt - allData[a].generatedAt) // Mới nhất lên trên
+    .forEach(k => {
+      if (allData[k].english_corrections) {
+        allCorrections.push(...allData[k].english_corrections);
+      }
+    });
+
+  if (vocabs.length === 0 && allCorrections.length === 0) {
+    lockerCard.style.display = 'none';
+    return;
+  }
+  
+  lockerCard.style.display = 'block';
+
+  // Render Vocab
+  vocabList.innerHTML = '';
+  if (vocabs.length === 0) {
+    vocabList.innerHTML = '<p style="font-size:13px; color:#8b949e;">Bạn chưa dùng tính năng bôi đen dịch từ chuyên ngành (Chuột phải -> CogniTrail) bao giờ.</p>';
+  } else {
+    vocabs.slice(0, 50).forEach(v => {
+      vocabList.innerHTML += `
+        <div class="vocab-item">
+          <div class="vocab-word">${v.text}</div>
+          <div class="vocab-def">${v.explanation}</div>
+        </div>
+      `;
+    });
+  }
+
+  // Render Grammar
+  grammarList.innerHTML = '';
+  if (allCorrections.length === 0) {
+    grammarList.innerHTML = '<p style="font-size:13px; color:#8b949e;">Chưa có log chat Tiếng Anh nào bị AI bắt lỗi!</p>';
+  } else {
+    allCorrections.slice(0, 30).forEach(g => {
+      grammarList.innerHTML += `
+        <div class="grammar-item">
+          <div class="grammar-original">❌ ${g.original}</div>
+          <div class="grammar-corrected">✅ ${g.corrected}</div>
+          <div class="grammar-reason">💡 ${g.reason}</div>
+        </div>
+      `;
+    });
+  }
 }

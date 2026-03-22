@@ -83,7 +83,7 @@
 <body>
   <div class="header">
     <div class="dot"></div>
-    <h2>CogniTrail <span style="font-size:10px;color:#444;font-weight:400">v1.7.0</span></h2>
+    <h2>CogniTrail <span style="font-size:10px;color:#444;font-weight:400">v1.8.0</span></h2>
     <div class="header-btns">
       <button class="btn btn-ghost" id="openDashboard" style="color:#d8b4e2; border:1px solid #3b2d4a;">📊 Chart</button>
       <button class="btn btn-ghost" id="clearLog">Xoá</button>
@@ -107,6 +107,7 @@
   <div class="tabs">
     <div class="tab active" data-tab="log">Hoạt động</div>
     <div class="tab" data-tab="history">Tóm tắt AI</div>
+    <div class="tab" data-tab="ignored">Đã ẩn</div>
     <div class="tab" data-tab="settings">Cài đặt</div>
     <div class="tab" data-tab="onboard">🔑 Cài API</div>
     <div class="tab" data-tab="debug">Debug</div>
@@ -126,6 +127,12 @@
   </div>
   <div class="panel" id="panel-history">
     <div class="empty" id="emptyHistory">Chưa có tóm tắt nào.</div>
+  </div>
+  <div class="panel" id="panel-ignored">
+    <div style="padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted);">Danh sách các mục đã bị bỏ qua, sẽ không hiện và không ghi nhận nữa.</div>
+    <div id="ignored-list-container">
+      <div class="empty" id="emptyIgnored">Chưa có mục nào bị ẩn.</div>
+    </div>
   </div>
   <div class="panel" id="panel-settings">
     <div class="settings-group">

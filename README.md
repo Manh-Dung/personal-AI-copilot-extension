@@ -16,7 +16,7 @@ CogniTrail không quan tâm bạn nhắn bao nhiêu câu chat, nó quan tâm đ�
 
 ---
 
-## 🚀 Các Tính Năng Đỉnh Cao (v1.7.0)
+## 🚀 Các Tính Năng Đỉnh Cao (v1.8.0)
 
 ### 1. ⌨️ Mắt thần đo lường làm việc thực tế (Keystrokes & Active Focus)
 * **Bắt bệnh Tutorial Hell:** Nếu bạn ngâm mình trên trang ReactJS Docs hơn 5 phút nhưng **số phím gõ bằng 0**, AI hiểu bạn chỉ đang đọc chay và lặn ngụp trong mớ lý thuyết. Nó lập tức gợi ý bạn mở IDE lên thực hành.
@@ -36,7 +36,7 @@ Không tóm tắt lắt nhắt, CogniTrail gom dữ liệu để tổng kết v�
 ### 4. 🎛 Tối ưu Token LLM & Quản trị Dữ liệu Gọn gàng
 * **Context Window Compression:** Extension tự động nén log, cắt chuỗi dài >100 ký tự và chỉ gửi tối đa 80 hành động gần nhất tới AI API. Vừa đủ context, vừa siêu tiết kiệm Token (chạy chi phí api rất rẻ).
 * **Quản trị Data File:** Khả năng Import và Export toàn bộ cấu trúc dữ liệu JSON để bạn mang sang máy khác học tiếp.
-* **Log Filter UI:** Xóa và lọc trực tiếp từng thao tác rác không muốn AI ngó qua trong Tab Quản trị.
+* **Log Filter UI:** Xóa và lọc trực tiếp từng thao tác rác không muốn AI ngó qua trong Tab Quản trị. Đặc biệt bổ sung tính năng **Bỏ qua (Skip)** vĩnh viễn các hành động lặp lại không mong muốn (kèm Tab "Đã ẩn" để dễ dàng khôi phục).
 
 ---
 

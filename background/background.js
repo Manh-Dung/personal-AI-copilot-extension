@@ -1,5 +1,5 @@
 // =============================================
-// background.js — v1.6.0
+// background.js — v1.8.0
 // Dùng alarm để đánh thức SW — không phụ thuộc sendMessage.
 // =============================================
 
@@ -7,7 +7,7 @@ const OR_MODEL   = 'stepfun/step-3.5-flash:free';
 const BATCH_KEY  = 'pending_batch';
 const ALARM_NAME = 'do_summarize';
 
-console.log('[AIS BG v1.6.0] started');
+console.log('[AIS BG v1.8.0] started');
 
 // ---- Debug ----
 function dbg(msg) {
@@ -44,6 +44,67 @@ chrome.storage.onChanged.addListener((changes, area) => {
     }
   }
 });
+
+// ---- KHỞI TẠO CONTEXT MENU: DỊCH & GIẢI NGHĨA ----
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "cognitrail-explain",
+    title: "CogniTrail: Dịch & Giải nghĩa",
+    contexts: ["selection"]
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === "cognitrail-explain") {
+    const text = info.selectionText;
+    const url = tab.url;
+    
+    // Yêu cầu Màn hình Content hiện Popup Loading
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_TRANSLATION_LOADING', text });
+    
+    // Chờ AI xử lý trả cứu
+    const explanation = await explainVocabAI(text, url);
+    if (explanation) {
+      const vocabData = { text, explanation, url, time: Date.now() };
+      
+      // Lưu lại kho lưu trữ ngữ pháp cá nhân (English Vocab Locker)
+      const allData = await storageGet(['english_vocab']);
+      const vocabs = allData.english_vocab || [];
+      vocabs.unshift(vocabData);
+      await storageSet({ english_vocab: vocabs.slice(0, 100) }); // Giới hạn 100 từ mới nhất
+      
+      // Đẩy trả lại cho giao diện
+      chrome.tabs.sendMessage(tab.id, { type: 'SHOW_TRANSLATION_RESULT', vocab: vocabData });
+    } else {
+      chrome.tabs.sendMessage(tab.id, { type: 'SHOW_TRANSLATION_ERROR' });
+    }
+  }
+});
+
+async function explainVocabAI(text, url) {
+  const { apiKey } = await storageGet(['apiKey']);
+  if (!apiKey) return null;
+  
+  const prompt = `Bạn là cuốn từ điển chuyên biệt cho Kĩ sư Phần mềm (Software Engineer) tên là CogniTrail Mentor.
+Văn bản / Từ vựng User bôi đen: "${text}"
+Ngữ cảnh (Nơi bắt gặp): ${url}
+
+Yêu cầu: Giải nghĩa ngắn gọn (tiếng Việt), chỉ thẳng vào ngữ cảnh lập trình (Nếu có). Bắt buộc trả về câu trả lời súc tích tuyệt đối (Không dạ vâng, hỏi thăm).`;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: OR_MODEL, messages: [{ role: 'user', content: prompt }] })
+    });
+    
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || "";
+  } catch (err) {
+    dbg('Lỗi Explain AI: ' + err.message);
+    return null;
+  }
+}
 
 // Alarm 1 phút để kiểm tra Giờ chốt sổ recap hoặc "Đền bù" (catch-up) nếu user offline lúc đến giờ
 chrome.alarms.create('check_daily', { periodInMinutes: 1 });
@@ -270,11 +331,12 @@ BỘ NHỚ DÀI HẠN HIỆN TẠI TỪ CÁC NGÀY TRƯỚC:
 
   const prompt = `System Instruction:
 Bạn là một AI Mentor khắt khe và sâu sắc. Bạn phân tích hành vi duyệt web lưu trong Log, kết hợp Bộ Nhớ Dài Hạn để xem tôi có tiến bộ không.
-HÃY PHÂN TÍCH THEO 4 TRỤC DẤU VẾT NHẬN THỨC (COGNITIVE TRAILS):
+HÃY PHÂN TÍCH THEO 5 TRỤC DẤU VẾT NHẬN THỨC (COGNITIVE TRAILS):
 1. Tiến hóa câu hỏi: Hỏi HOW (tay ngang), WHY/WHICH (bắt đầu hiểu), hay DESIGN/SCALE (làm chủ)?
 2. Tần suất lặp lỗi: Có đang vướng lại một concept (state, async...) mà lẽ ra gỡ được rồi không?
 3. Tỷ lệ phụ thuộc: Đang thả file nghìn dòng bắt AI tìm lỗi (Yếu), hay chỉ hỏi 1 đoạn logic/regex cốt lõi (Vững)?
 4. Tư duy Refactor: Đang dùng Workaround để ép code chạy tạm (Bẫy nguy hiểm) hay tự hỏi cách tối ưu DRY/SOLID?
+5. Giao tiếp Tiếng Anh (English Polish): Dò tìm các cụm từ/câu Tiếng Anh tôi đã gõ ("➤ Tôi gửi" hoặc "✏️ Draft"). Phát hiện tư duy "Vinglish", sai ngữ pháp hoặc diễn đạt lủng củng để vạch ra lỗi sai và viết lại cho sang trọng, chuẩn kĩ sư bản xứ.
 
 LUẬT SUY LUẬN MỚI: Tuyệt đối KHÔNG đánh dấu là "learned/mastered" chỉ vì ngừng hỏi. "Mastered" chỉ đạt được khi user hỏi cách tối ưu (Refactor/Scale) hoặc chia nhỏ vấn đề tinh tế. Nếu ngừng hỏi sau khi copy một đống code tạp nham, đó là DÙNG WORKAROUND (chưa hiểu gốc) -> Ghi vào weaknesses/struggles.
 
@@ -296,7 +358,10 @@ YÊU CẦU: Trả về ĐÚNG MỘT chuỗi JSON (KHÔNG bọc markdown) format 
   "knowledge_graph_update": {
     "mastered": ["Kĩ năng thực sự làm chủ (Hỏi được câu HOW TO SCALE / REFACTOR)"],
     "new_weaknesses": ["Lỗi tư duy hoặc bẫy Workaround mới mắc phải"]
-  }
+  },
+  "english_corrections": [
+    { "original": "how to fix bug memory crash out", "corrected": "How to resolve the memory leak issue?", "reason": "Dùng 'resolve' thay cho 'fix' sẽ sang hơn, và diễn đạt đúng ngữ cảnh lập trình." }
+  ]
 }`;
 
   await storageSet({ is_recapizing: true });

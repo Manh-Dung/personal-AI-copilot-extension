@@ -2,14 +2,15 @@
   "manifest_version": 3,
   "name": "CogniTrail: Personal AI Mentor",
   "short_name": "CogniTrail",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Tự động phân tích thói quen duyệt web/code, cấu trúc dấu vết nhận thức và làm Cố vấn học tập (Mentor).",
   "permissions": [
     "activeTab",
     "scripting",
     "storage",
     "notifications",
-    "alarms"
+    "alarms",
+    "contextMenus"
   ],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [

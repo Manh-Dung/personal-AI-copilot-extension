@@ -1,5 +1,5 @@
 // =============================================
-// content.js — v1.6.0
+// content.js — v1.8.0
 // Không dùng sendMessage để gửi SUMMARIZE.
 // Batch ghi vào storage → alarm đánh thức SW.
 // Chỉ main frame xử lý FORCE_SUMMARIZE.
@@ -67,6 +67,13 @@ function writeLog(entry, triggerAlarm = false) {
   setTimeout(() => recentTexts.delete(dupKey), 10000);
 
   chrome.storage.local.get(null, (allData) => {
+    const ignoredItems = allData.ignored_items || [];
+    const isIgnored = ignoredItems.some(i => i.status === entry.status && i.text === textBody);
+    if (isIgnored) {
+      dbg(`🚫 Bỏ qua (ignored list): "${textBody.slice(0, 30)}"`);
+      return;
+    }
+
     const now = Date.now();
     const isDuplicate = Object.keys(allData).some(k => {
       if (!k.startsWith(LOG_PREFIX)) return false;
@@ -98,7 +105,7 @@ function writeLog(entry, triggerAlarm = false) {
 
 // ---- Debug ----
 function dbg(msg) {
-  console.log('[AIS v1.6.0]', msg);
+  console.log('[AIS v1.8.0]', msg);
   chrome.storage.local.set({ ['dbg_' + uid()]: { msg, time: Date.now() } });
 }
 
@@ -128,7 +135,7 @@ function isInput(el) {
 }
 function host() { return location.hostname.replace('www.', ''); }
 
-dbg(`✅ v1.6.0 ${IS_MAIN ? '[main]' : '[iframe]'}: ${location.hostname}`);
+dbg(`✅ v1.8.0 ${IS_MAIN ? '[main]' : '[iframe]'}: ${location.hostname}`);
 
 // Bỏ hàm triggerSummarize hoàn toàn vì không còn dùng BATCH_KEY.
 
@@ -567,5 +574,57 @@ if (IS_MAIN) {
         chrome.storage.local.set({ keystrokeCount: 0 });
       });
     }
+
+    // Phase 8: Contextual English
+    if (msg.type === 'SHOW_TRANSLATION_LOADING') {
+      showExplanationPopup('📖 CogniVocab AI', `Đang phân tích ngữ nghĩa chuyên ngành của: <b>"${msg.text}"</b>... ⏳`);
+    } else if (msg.type === 'SHOW_TRANSLATION_RESULT') {
+      showExplanationPopup('📖 Nghĩa chuyên ngành (Lưu vào tủ)', msg.vocab.explanation.replace(/\n/g, '<br>'));
+    } else if (msg.type === 'SHOW_TRANSLATION_ERROR') {
+      showExplanationPopup('⚠️ Lỗi kết nối', 'Tín hiệu AI bị gián đoạn, không thể giải nghĩa.');
+    }
   });
+}
+
+// ==== Phase 8: Nâng cấp Shadow Popup Dành riêng cho Dịch Thuật ====
+// Tránh việc ghi đè lên Popup của Mentor
+let explainShown = false;
+function showExplanationPopup(title, msg) {
+  explainShown = true;
+  const host = document.createElement('div');
+  Object.assign(host.style, { position: 'fixed', top: '20px', right: '20px', zIndex: '2147483647' }); // Dịch thuật nhảy ở Top Right
+  document.documentElement.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: 'open' });
+  shadow.innerHTML = `
+    <style>
+      .ais-explain {
+        background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(10px);
+        border: 1px solid #30363d; border-top: 3px solid #58a6ff;
+        color: #e6edf3; font-family: -apple-system, sans-serif; padding: 18px; border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6); width: 340px;
+        transform: translateY(-50px); opacity: 0; transition: all 0.4s ease;
+      }
+      .ais-explain.show { transform: translateY(0); opacity: 1; }
+      .ex-title { font-weight: 600; font-size: 15px; margin-bottom: 10px; display: flex; align-items:center; justify-content:space-between; color: #58a6ff; }
+      .ex-msg { font-size: 14px; line-height: 1.6; color: #c9d1d9; }
+      .ex-close { cursor: pointer; color: #888; font-size: 20px; font-weight: bold; background:none; border:none; padding:0; outline:none; }
+      .ex-close:hover { color: #fff; }
+      b { color: #fff; }
+    </style>
+    <div class="ais-explain">
+      <div class="ex-title"><span>${title}</span><button class="ex-close" id="btn-close">&times;</button></div>
+      <div class="ex-msg">${msg}</div>
+    </div>
+  `;
+  
+  setTimeout(() => shadow.querySelector('.ais-explain').classList.add('show'), 50);
+  
+  const cls = () => {
+    shadow.querySelector('.ais-explain').classList.remove('show');
+    setTimeout(() => host.remove(), 400);
+  };
+  shadow.getElementById('btn-close').onclick = cls;
+  // Translation Popup để lâu hơn (25s) để người dùng kịp đọc giải nghĩa dài
+  setTimeout(() => { if (host.isConnected) cls(); }, 25000);
 }

@@ -1,5 +1,5 @@
 // =============================================
-// popup.js — v1.6.0
+// popup.js — v1.8.0
 // Đọc log theo prefix key thay vì key 'log'
 // =============================================
 
@@ -35,12 +35,14 @@ const chkFloatingToast = document.getElementById('chk_floating_toast');
 const saveTrackingBtn = document.getElementById('saveTracking');
 const emptyLog     = document.getElementById('emptyLog');
 const emptyHistory = document.getElementById('emptyHistory');
+const emptyIgnored = document.getElementById('emptyIgnored');
 const emptyDebug   = document.getElementById('emptyDebug');
 const dotApi       = document.getElementById('dotApi');
 const lblApi       = document.getElementById('lblApi');
 const keystrokeLbl = document.getElementById('keystrokeCount');
 const logCountLbl  = document.getElementById('logCount');
 const spinnerSummarizing = document.getElementById('spinnerSummarizing');
+const tabOnboard     = document.querySelector('.tab[data-tab="onboard"]');
 
 // ---- Đọc tất cả entries từ storage ----
 function loadAll(cb) {
@@ -65,7 +67,8 @@ function loadAll(cb) {
       customPrompt:   all.customPrompt || '',
       trackingOptions: all.trackingOptions || { sent:true, draft:true, copy:true, click:true, ai:true, page:true, floatingToast:true, summarizeInterval:10, dailyRecapTime:'08:00', weeklyRecapDay:0 },
       keystrokeCount: all.keystrokeCount || 0,
-      is_summarizing: all.is_summarizing || false
+      is_summarizing: all.is_summarizing || false,
+      ignored_items:  all.ignored_items || []
     });
   });
 }
@@ -73,6 +76,7 @@ function loadAll(cb) {
 // ---- Init ----
 let currentLogData = [];
 let currentFilter = 'all';
+let currentIgnoredData = [];
 
 loadAll((data) => {
   if (data.apiKey) apiKeyInput.value = data.apiKey;
@@ -102,6 +106,8 @@ loadAll((data) => {
   currentLogData = data.logEntries;
   renderLog(currentLogData);
   renderHistory(data.history);
+  currentIgnoredData = data.ignored_items;
+  renderIgnored(currentIgnoredData);
   renderDebug(data.debugEntries);
   keystrokeLbl.textContent = data.keystrokeCount;
   logCountLbl.textContent  = data.logEntries.length;
@@ -172,6 +178,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         currentLogData = data.logEntries;
         renderLog(currentLogData);
         renderHistory(data.history);
+        currentIgnoredData = data.ignored_items;
+        renderIgnored(currentIgnoredData);
         renderDebug(data.debugEntries);
         keystrokeLbl.textContent = data.keystrokeCount;
         logCountLbl.textContent  = data.logEntries.length;
@@ -190,7 +198,7 @@ document.querySelectorAll('.tag-filter').forEach(btn => {
   });
 });
 
-// ---- Xoá log lẻ ----
+// ---- Bỏ qua log & Xoá log lẻ ----
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('del-log-btn')) {
     const key = e.target.dataset.key;
@@ -198,6 +206,50 @@ document.addEventListener('click', (e) => {
       e.target.closest('.log-item').remove();
       currentLogData = currentLogData.filter(i => i.storageKey !== key);
       logCountLbl.textContent = currentLogData.length;
+    });
+  } else if (e.target.classList.contains('skip-log-btn')) {
+    const key = e.target.dataset.key;
+    const logItem = currentLogData.find(i => i.storageKey === key);
+    if (!logItem) return;
+    
+    if (confirm(`Bạn có chắc muốn bỏ qua CẢ TRONG TƯƠNG LAI với hành động\n[${logItem.status}] "${logItem.text.slice(0, 50)}..." không?`)) {
+      chrome.storage.local.get(['ignored_items'], (res) => {
+        const ignored = res.ignored_items || [];
+        const isExist = ignored.find(i => i.status === logItem.status && i.text === logItem.text);
+        if (!isExist) {
+          ignored.push({ status: logItem.status, text: logItem.text });
+          chrome.storage.local.set({ ignored_items: ignored }, () => {
+            currentIgnoredData = ignored;
+            if (document.querySelector('.tab.active')?.dataset?.tab === 'ignored') {
+              renderIgnored(currentIgnoredData);
+            }
+          });
+        }
+        
+        // Remove existing items that match this criteria
+        chrome.storage.local.get(null, (all) => {
+          const keysToRemove = Object.keys(all).filter(k => 
+            k.startsWith(LOG_PREFIX) && all[k].status === logItem.status && all[k].text === logItem.text
+          );
+          if (keysToRemove.length) {
+            chrome.storage.local.remove(keysToRemove, () => {
+              currentLogData = currentLogData.filter(i => !(i.status === logItem.status && i.text === logItem.text));
+              renderLog(currentLogData);
+              logCountLbl.textContent = currentLogData.length;
+            });
+          }
+        });
+      });
+    }
+  } else if (e.target.classList.contains('restore-ignored-btn')) {
+    const index = parseInt(e.target.dataset.index, 10);
+    chrome.storage.local.get(['ignored_items'], (res) => {
+      let ignored = res.ignored_items || [];
+      ignored.splice(index, 1);
+      chrome.storage.local.set({ ignored_items: ignored }, () => {
+        currentIgnoredData = ignored;
+        renderIgnored(currentIgnoredData);
+      });
     });
   }
 });
@@ -291,6 +343,7 @@ function renderLog(entries) {
         <div class="log-text">${escHtml(item.text)}</div>
         <div class="log-meta">${time} · ${item.url || ''}${trigger}</div>
       </div>
+      <button class="skip-log-btn" data-key="${item.storageKey}" title="Bỏ qua (ẩn khỏi danh sách và không ghi nhận nữa)" style="background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; margin-right: 4px;" onmouseover="this.style.color='#facc15'" onmouseout="this.style.color='var(--muted)'">🚫</button>
       <button class="del-log-btn" data-key="${item.storageKey}" title="Xóa log này" style="background:none; border:none; color:var(--red-dim); font-size:16px; cursor:pointer;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--red-dim)'">&times;</button>
       `;
     container.appendChild(div);
@@ -310,6 +363,27 @@ function renderHistory(history) {
       ${tagHtml}
       <div class="history-text">${escHtml(item.summary)}</div>`;
     panelHistory.appendChild(div);
+  });
+}
+
+function renderIgnored(items) {
+  const container = document.getElementById('ignored-list-container');
+  if (!container) return;
+  Array.from(container.querySelectorAll('.ignored-item')).forEach(el => el.remove());
+  if (!items || !items.length) { emptyIgnored.style.display = 'block'; return; }
+  emptyIgnored.style.display = 'none';
+  items.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'log-item ignored-item';
+    const label = BADGE_LABEL[item.status] || (item.status || '').toUpperCase();
+    div.innerHTML = `
+      <span class="badge ${item.status}">${label}</span>
+      <div class="log-body">
+        <div class="log-text">${escHtml(item.text)}</div>
+      </div>
+      <button class="restore-ignored-btn" data-index="${index}" title="Khôi phục (ghi nhận lại bình thường)" style="background:none; border:none; color:#4ade80; font-size:18px; line-height:1; cursor:pointer;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#4ade80'">&#x21BA;</button>
+    `;
+    container.appendChild(div);
   });
 }
 
@@ -335,6 +409,17 @@ function updateApiStatus(key) {
   const ok = key && key.startsWith('sk-or');
   dotApi.className = 'chip-dot ' + (ok ? 'ok' : 'err');
   lblApi.textContent = ok ? 'API: đã cài' : 'API: chưa cài';
+  
+  if (tabOnboard) {
+    if (ok) {
+      tabOnboard.style.display = 'none';
+      if (tabOnboard.classList.contains('active')) {
+        document.querySelector('.tab[data-tab="log"]').click();
+      }
+    } else {
+      tabOnboard.style.display = 'block';
+    }
+  }
 }
 
 function escHtml(str) {
@@ -345,8 +430,11 @@ function escHtml(str) {
 setInterval(() => {
   loadAll((data) => {
     const activeTab = document.querySelector('.tab.active')?.dataset?.tab;
+    currentIgnoredData = data.ignored_items;
+    
     if (activeTab === 'log')     renderLog(data.logEntries);
     if (activeTab === 'history') renderHistory(data.history);
+    if (activeTab === 'ignored') renderIgnored(currentIgnoredData);
     if (activeTab === 'debug')   renderDebug(data.debugEntries);
     keystrokeLbl.textContent = data.keystrokeCount;
     logCountLbl.textContent  = data.logEntries.length;

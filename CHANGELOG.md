@@ -4,6 +4,12 @@ Tất cả những thay đổi nổi bật của dự án **AI Chat Summarizer**
 
 Hiển thị theo định dạng Semantic Versioning.
 
+## [1.8.0] - Tính năng Lọc thông minh (Smart Filter)
+### Thêm mới (Added)
+- **Tính năng Bỏ qua (Skip/Ignore):** Thêm nút 🚫 cạnh mỗi log để ẩn vĩnh viễn các hành động rác. Các hành động cùng loại và nội dung sẽ bị chặn ghi nhận trong tương lai.
+- **Quản lý Mục Đã Ẩn:** Bổ sung tab **Đã ẩn** để người dùng dễ dàng xem lại và có thể khôi phục (Restore) bất cứ lúc nào nếu bấm nhầm.
+- **Tự động Ẩn Tab Cài API:** Tab **🔑 Cài API** giờ đây sẽ tự động ẩn đi sau khi người dùng cấu hình thành công OpenRouter API Key, giúp giao diện trở nên tối giản hơn.
+
 ## [1.7.0] - Chuẩn bị Ra Mắt (Scheduling & UI Toast)
 ### Thêm mới (Added)
 - **Time Setup:** Tuỳ chọn cài đặt mức thời gian gom cụm tóm tắt (Mặc định 10 phút, Min 5 phút, Max vô hạn).
