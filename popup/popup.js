@@ -18,6 +18,7 @@ const panelDebug   = document.getElementById('panel-debug');
 const customPromptInput= document.getElementById('customPrompt');
 const savePromptBtn= document.getElementById('savePrompt');
 const exportDataBtn= document.getElementById('exportData');
+const importDataBtn= document.getElementById('importDataBtn');
 const importFileInp= document.getElementById('importFile');
 const chkSent = document.getElementById('chk_sent');
 const chkDraft = document.getElementById('chk_draft');
@@ -197,6 +198,8 @@ document.addEventListener('click', (e) => {
 });
 
 // ---- Import Data ----
+importDataBtn.addEventListener('click', () => importFileInp.click());
+
 importFileInp.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
