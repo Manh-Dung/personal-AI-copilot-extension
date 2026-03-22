@@ -1,4 +1,4 @@
-# 🧠 Personal AI Copilot (Browser Extension)
+# 🧠 CogniTrail: Personal AI Mentor (Browser Extension)
 *Trợ lý ảo cá nhân thấu hiểu thói quen, được nâng cấp từ nền tảng "AI Chat Summarizer".*
 
 ## 💡 Triết Lý Cốt Lõi

@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "AI Chat Summarizer",
+  "name": "CogniTrail: Personal AI Mentor",
+  "short_name": "CogniTrail",
   "version": "1.7.0",
-  "description": "Tự động tóm tắt những gì bạn đã nhắn",
+  "description": "Tự động phân tích thói quen duyệt web/code, cấu trúc dấu vết nhận thức và làm Cố vấn học tập (Mentor).",
   "permissions": [
     "activeTab",
     "scripting",
