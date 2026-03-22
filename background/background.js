@@ -169,7 +169,7 @@ async function testApi() {
 }
 
 function notify(title, message) {
-  chrome.notifications.create({ type: 'basic', iconUrl: 'icon.png', title, message, priority: 1 });
+  chrome.notifications.create({ type: 'basic', iconUrl: '../assets/icon.png', title, message, priority: 1 });
 }
 
 async function saveSummary(summary, count, tags) {

@@ -161,10 +161,82 @@ function saveDraft(text) {
   }
 }
 
+// ---- Lắng nghe hiệu suất hoạt động trên trang (Focus Time) ----
+let activeTimeMs = 0;
+let lastActiveStamp = Date.now();
+let isIdle = false;
+let idleTimer = null;
+const IDLE_TIMEOUT = 30000; // 30s không làm gì -> tính là idle
+let domainKeystrokes = 0;
+
+function resetIdle() {
+  if (isIdle) {
+    isIdle = false;
+    lastActiveStamp = Date.now();
+  }
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    isIdle = true;
+    updateActiveTime(); // cộng nốt vào tổng ngay khi idle
+  }, IDLE_TIMEOUT);
+}
+
+function updateActiveTime() {
+  if (isIdle || document.hidden) return;
+  const now = Date.now();
+  activeTimeMs += (now - lastActiveStamp);
+  lastActiveStamp = now;
+}
+
+function saveDomainTimeInfo() {
+  if (!IS_MAIN) return; // Chỉ tính active time ở main frame để tránh đội thời gian từ iframe
+  if (!activeTimeMs && !domainKeystrokes) return;
+  
+  const d = new Date();
+  const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const h = host();
+  const key = `active_${dateStr}_${h}`;
+  
+  const addTime = activeTimeMs;
+  const addKeys = domainKeystrokes;
+  activeTimeMs = 0;
+  domainKeystrokes = 0;
+  lastActiveStamp = Date.now();
+  
+  chrome.storage.local.get([key], (res) => {
+    const existing = res[key] || { timeMs: 0, keystrokes: 0, url: location.origin };
+    existing.timeMs += addTime;
+    existing.keystrokes += addKeys;
+    chrome.storage.local.set({ [key]: existing });
+  });
+}
+
+// Bắt đầu track Time
+if (IS_MAIN) {
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+    window.addEventListener(evt, resetIdle, { passive: true });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      updateActiveTime();
+      isIdle = true;
+      saveDomainTimeInfo(); // Lưu luôn nếu rời tab
+    } else {
+      isIdle = false;
+      lastActiveStamp = Date.now();
+      resetIdle();
+    }
+  });
+  resetIdle();
+  setInterval(() => { updateActiveTime(); saveDomainTimeInfo(); }, 60000);
+}
+
 // ---- Typing ----
 function handleTyping(el) {
   if (!isInput(el)) return;
   keystrokeCount++;
+  domainKeystrokes++;
   if (keystrokeCount % 10 === 0) chrome.storage.local.set({ keystrokeCount });
   if (!trackingOpts.draft) return;
   clearTimeout(debounceTimer);

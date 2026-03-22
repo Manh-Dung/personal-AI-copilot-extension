@@ -158,6 +158,11 @@ clearLogBtn.addEventListener('click', async () => {
   logCountLbl.textContent  = 0;
 });
 
+// ---- Mở Dashboard ----
+document.getElementById('openDashboard').addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('dashboard/dashboard.html') });
+});
+
 // ---- Test API ----
 testApiBtn.addEventListener('click', () => {
   testApiBtn.disabled = true;
