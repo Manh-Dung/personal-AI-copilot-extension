@@ -110,7 +110,7 @@ loadAll((data) => {
   renderIgnored(currentIgnoredData);
   renderDebug(data.debugEntries);
   keystrokeLbl.textContent = data.keystrokeCount;
-  logCountLbl.textContent  = data.logEntries.length;
+  logCountLbl.textContent  = currentLogData.length;
 });
 
 // ---- Lưu API key ----
@@ -431,13 +431,14 @@ setInterval(() => {
   loadAll((data) => {
     const activeTab = document.querySelector('.tab.active')?.dataset?.tab;
     currentIgnoredData = data.ignored_items;
+    currentLogData = data.logEntries.filter(e => !currentIgnoredData.some(i => i.status === e.status && i.text === e.text));
     
-    if (activeTab === 'log')     renderLog(data.logEntries);
+    if (activeTab === 'log')     renderLog(currentLogData);
     if (activeTab === 'history') renderHistory(data.history);
     if (activeTab === 'ignored') renderIgnored(currentIgnoredData);
     if (activeTab === 'debug')   renderDebug(data.debugEntries);
     keystrokeLbl.textContent = data.keystrokeCount;
-    logCountLbl.textContent  = data.logEntries.length;
+    logCountLbl.textContent  = currentLogData.length;
     updateApiStatus(data.apiKey);
     spinnerSummarizing.style.display = data.is_summarizing ? 'flex' : 'none';
   });
