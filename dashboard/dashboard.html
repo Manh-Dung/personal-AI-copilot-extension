@@ -2,65 +2,84 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8"/>
-  <title>AI Copilot Dashboard</title>
+  <title>CogniTrail Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>📊 Phân tích Hành vi & Tập trung (Active Focus Time)</h1>
-      <p>Thống kê thời gian và nhịp độ làm việc trên các trang web (Phase 1).</p>
+    <header class="top-header">
+      <div class="header-titles">
+        <h1>🧠 CogniTrail Analytics</h1>
+        <p>Phân tích dấu vết nhận thức và đo lường sự tập trung thực tế.</p>
+      </div>
+      <div class="header-actions">
+        <!-- Control buttons -->
+        <button id="btnGenerate" class="btn-primary">⚡ Tạo Daily Insight</button>
+        <button id="btnGenerateWeekly" class="btn-secondary">📅 Tạo Weekly Analytics</button>
+      </div>
     </header>
+    
+    <!-- Status indicator (loading logic) -->
+    <div id="statusBadge" class="status-badge" style="display:none;"></div>
+
     <main>
-      <div class="card" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>🧠 Daily AI Copilot Insights</h2>
-          <button id="btnGenerateRecap" class="btn-dashboard">Tiến hành Phân Tích Ngày</button>
+      <!-- Grid layout for the two cards -->
+      <div class="insights-grid">
+        <!-- Daily Insight Card -->
+        <div class="card neon-card daily-neon" id="recapCard" style="display:none;">
+          <div class="card-header">
+            <h2>✨ Daily Insight</h2>
+          </div>
+          <div class="card-body">
+            <div class="stats-row">
+              <div class="stat-box">
+                <h3>Kĩ Năng Rèn Luyện</h3>
+                <div id="skills" class="tags"></div>
+              </div>
+              <div class="stat-box">
+                <h3>Vấn Đề / Lỗi Đang Vướng</h3>
+                <p id="coreFocus" class="text-danger"></p>
+              </div>
+            </div>
+            <div class="summary-box">
+              <h3>Nhận Xét Hôm Nay</h3>
+              <p id="dailySummary"></p>
+            </div>
+          </div>
         </div>
-        <div id="recap-container" class="insight-box">
-          <div style="text-align:center; color:#666; font-size:13px; padding:20px;">
-            Hệ thống chưa tạo báo cáo phân tích nào cho hôm nay. Bấm nút phía trên để AI tổng hợp nhé!
+
+        <!-- Weekly Insight Card -->
+        <div class="card neon-card weekly-neon" id="weeklyCard" style="display:none;">
+          <div class="card-header">
+            <h2>📅 Weekly Analytics</h2>
+            <div class="score-badge">Trend: <span id="productivityTrend"></span></div>
+          </div>
+          <div class="card-body">
+            <div class="stats-row">
+              <div class="stat-box">
+                <h3>Top Kĩ Năng Tích Luỹ</h3>
+                <div id="weeklySkills" class="tags"></div>
+              </div>
+              <div class="stat-box">
+                <h3>Lỗ Hổng Lặp Lại Dài Hạn</h3>
+                <p id="coreWeakness" class="text-danger"></p>
+              </div>
+            </div>
+            <div class="summary-box">
+              <h3>Đánh Giá Toàn Cảnh Tuần</h3>
+              <p id="weeklySummary"></p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="actions">
-      <button id="btnGenerate">Thủ công: Tạo Daily Insight mới</button>
-      <button id="btnGenerateWeekly" style="background-color: var(--accent2); margin-left: 8px;">Tạo Weekly Analytics (7 ngày)</button>
-    </div>
-
-    <!-- Weekly Insight Card -->
-    <div class="card" id="weeklyCard" style="display:none; border:2px solid var(--accent2); margin-top: 24px;">
-      <div class="card-header">
-        <h2 style="color:var(--accent2);"><span class="icon">📅</span> Weekly Analytics (Tổng Kết Tuần)</h2>
-        <div class="score">Trend: <span id="productivityTrend"></span></div>
-      </div>
-      <div class="card-body">
-        <div class="stats-grid">
-          <div class="stat-box">
-            <h3>Top Kĩ Năng Tích Luỹ</h3>
-            <div id="weeklySkills" class="tags"></div>
-          </div>
-          <div class="stat-box">
-            <h3>Lỗ Hổng/Vấn Đề Dài Hạn</h3>
-            <p id="coreWeakness" style="color:var(--danger); font-weight:600; margin-top:8px;"></p>
-          </div>
-        </div>
-        <div class="summary-box">
-          <h3>Đánh Giá Toàn Cảnh & Kế Hoạch</h3>
-          <p id="weeklySummary"></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" id="recapCard" style="display:none; margin-top: 24px;">
-           <!-- Chart rendered by JS -->
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>⏱️ Thời gian tập trung theo Website</h2>
-        <div id="chart-container">
+      <!-- Chart Container -->
+      <div class="card glass-card">
+        <h2>⏱️ Active Focus Time (Thời gian tập trung)</h2>
+        <div id="chart-container" class="chart-wrapper">
            <!-- Chart rendered by JS -->
         </div>
       </div>

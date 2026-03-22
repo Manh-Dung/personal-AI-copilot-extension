@@ -106,8 +106,13 @@ function renderTags(arr, container, type='skill') {
 
 function renderDaily(recap) {
   recapCard.style.display = 'block';
-  renderTags(recap.skills || [], uSkills, 'skill');
-  coreFocus.textContent = recap.core_focus || 'Không có';
+  // Fallback map cho đúng structure của Phase 5 AI
+  const skillArr = recap.skills_practiced || recap.skills || [];
+  renderTags(skillArr, uSkills, 'skill');
+  
+  const struggleArr = recap.struggles || [];
+  coreFocus.textContent = (struggleArr.length > 0) ? struggleArr.join(', ') : 'Không có';
+  
   dailySummary.textContent = recap.summary || '';
 }
 
@@ -157,14 +162,14 @@ function renderChart(allData) {
     
     const row = document.createElement('div');
     row.className = 'bar-row';
-    // Đổi màu thanh dựa vào việc xem đó là trang học tập hay giải trí (cơ bản)
-    const isCode = domain.includes('github') || domain.includes('stackoverflow') || domain.includes('localhost');
-    let fillStyle = isCode ? 'background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);' : '';
+    // Đổi màu thanh phân tích nếu domain code (github, stackoverflow, localhost)
+    const isCode = domain.includes('github') || domain.includes('stackoverflow') || domain.includes('localhost') || domain.includes('figma');
+    let fillClass = isCode ? 'bar-fill bar-code' : 'bar-fill';
     
     row.innerHTML = `
       <div class="bar-label" title="${domain}">${domain}</div>
       <div class="bar-wrapper" title="${mins} phút">
-        <div class="bar-fill" style="width: ${pct}%; ${fillStyle}"></div>
+        <div class="${fillClass}" style="width: ${pct}%;"></div>
       </div>
       <div class="bar-value">
         ${mins} phút
