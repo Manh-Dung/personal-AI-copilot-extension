@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <title>AI Chat Summarizer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #F87171; --red-dim: #7f3a3a;
+      --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #222;
+      --border: #2a2a2a; --text: #e8e8e8; --muted: #555;
+    }
+    body { width: 380px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; background: var(--bg); color: var(--text); }
+
+    .header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 7px var(--red); flex-shrink: 0; }
+    .header h2 { font-size: 13px; font-weight: 600; color: #fff; flex: 1; }
+    .header-btns { display: flex; gap: 5px; }
+
+    .btn { padding: 4px 9px; border-radius: 5px; border: none; cursor: pointer; font-size: 11px; font-weight: 500; }
+    .btn-ghost { background: var(--bg3); color: var(--muted); }
+    .btn-ghost:hover { color: var(--red); }
+    .btn-red { background: var(--red); color: #fff; }
+    .btn-red:hover { opacity: 0.85; }
+    .btn-green { background: #166534; color: #4ade80; }
+    .btn-green:hover { background: #14532d; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Cupertino Spinner */
+    .cupertino-spinner { display: inline-block; width: 14px; height: 14px; animation: cupertino-spin 1s steps(8, end) infinite; vertical-align: middle; }
+    .cupertino-spinner i { display: block; width: 1.5px; height: 3.5px; background: currentColor; border-radius: 1px; position: absolute; left: 6px; top: 0; transform-origin: 0.75px 7px; }
+    @keyframes cupertino-spin { 100% { transform: rotate(360deg); } }
+
+    .settings-group { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .settings-group label { display: block; font-size: 11px; color: var(--text); margin-bottom: 6px; font-weight: 500; }
+    input[type="password"] { flex: 1; padding: 6px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 12px; outline: none; }
+    input[type="password"]:focus { border-color: var(--red-dim); }
+    .settings-group textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 12px; outline: none; font-family: inherit; resize: vertical; min-height: 50px; }
+    .settings-group textarea:focus { border-color: var(--red-dim); }
+    .btn-save { padding: 6px 11px; border-radius: 5px; border: none; cursor: pointer; background: var(--red); color: #fff; font-size: 12px; font-weight: 500; }
+    .btn-save:hover { opacity: 0.85; }
+
+    .status-bar { display: flex; gap: 12px; align-items: center; padding: 6px 14px; background: var(--bg2); border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+    .chip { display: flex; align-items: center; gap: 4px; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; }
+    .chip-dot.ok { background: #4ade80; box-shadow: 0 0 4px #4ade80; }
+    .chip-dot.err { background: var(--red); }
+
+    .tabs { display: flex; border-bottom: 1px solid var(--border); }
+    .tab { flex: 1; padding: 7px; text-align: center; font-size: 11px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+    .panel { display: none; max-height: 300px; overflow-y: auto; }
+    .panel.active { display: block; }
+
+    .log-item { display: flex; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+    .badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-top: 1px; }
+    .badge.sent    { background: #14532d; color: #4ade80; }
+    .badge.draft   { background: #1e3a5f; color: #60a5fa; }
+    .badge.erased  { background: #3b1515; color: #f87171; }
+    .badge.copied  { background: #3b2d00; color: #fbbf24; }
+    .badge.clicked-suggestion { background: #2d1f5e; color: #c084fc; }
+    .badge.clicked { background: #1a1a2e; color: #818cf8; }
+    .badge.ai-response { background: #0f2d2d; color: #34d399; }
+    .badge.visited-page { background: #3b2d4a; color: #d8b4e2; }
+    .log-body { flex: 1; min-width: 0; }
+    .log-text { color: var(--text); line-height: 1.4; word-break: break-word; font-size: 12px; }
+    .log-meta { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+    .debug-item { padding: 5px 14px; border-bottom: 1px solid #1a1a1a; font-size: 11px; font-family: 'Menlo','Consolas',monospace; color: #999; line-height: 1.4; }
+    .debug-item .debug-time { color: #444; margin-right: 6px; }
+    .debug-item.ok  { color: #4ade80; }
+    .debug-item.err { color: #f87171; }
+    .debug-item.warn { color: #fbbf24; }
+
+    .history-item { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .history-time { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+    .history-text { color: #ccc; line-height: 1.5; white-space: pre-wrap; font-size: 12px; }
+
+    .empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="dot"></div>
+    <h2>AI Chat Summarizer <span style="font-size:10px;color:#444;font-weight:400">v1.6.0</span></h2>
+    <div class="header-btns">
+      <button class="btn btn-ghost" id="clearLog">Xoá</button>
+      <button class="btn btn-green" id="testApi">Test API</button>
+      <button class="btn btn-red"   id="summarizeNow">⚡ Tóm tắt</button>
+    </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="chip">
+      <div class="chip-dot" id="dotApi"></div>
+      <span id="lblApi">API: chưa cài</span>
+    </div>
+    <div id="spinnerSummarizing" style="display:none; color:#60a5fa; margin-left:10px; font-weight:600; font-size:10px; align-items:center;"><span class="cupertino-spinner" style="position:relative;margin-right:4px;"><i></i><i style="transform:rotate(45deg);"></i><i style="transform:rotate(90deg);"></i><i style="transform:rotate(135deg);"></i><i style="transform:rotate(180deg);"></i><i style="transform:rotate(225deg);"></i><i style="transform:rotate(270deg);"></i><i style="transform:rotate(315deg);"></i></span> AI đang phân tích</div>
+    <div class="chip" style="margin-left:auto">
+      ⌨️ <span id="keystrokeCount">0</span> phím &nbsp;|&nbsp; 📋 <span id="logCount">0</span> entries
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="log">Hoạt động</div>
+    <div class="tab" data-tab="history">Tóm tắt AI</div>
+    <div class="tab" data-tab="settings">Cài đặt</div>
+    <div class="tab" data-tab="debug">Debug</div>
+  </div>
+
+  <div class="panel active" id="panel-log">
+    <div class="empty" id="emptyLog">Chưa có gì. Thử gõ gì đó trên trang web.</div>
+  </div>
+  <div class="panel" id="panel-history">
+    <div class="empty" id="emptyHistory">Chưa có tóm tắt nào.</div>
+  </div>
+  <div class="panel" id="panel-settings">
+    <div class="settings-group">
+      <label>OpenRouter API Key:</label>
+      <div style="display:flex;gap:6px;">
+        <input type="password" id="apiKey" placeholder="sk-or-v1-..."/>
+        <button class="btn-save" id="saveKey">Lưu</button>
+      </div>
+    </div>
+    <div class="settings-group">
+      <label>System Prompt (Huấn luyện viên cá nhân):</label>
+      <textarea id="customPrompt" placeholder="Nhập yêu cầu cho AI (VD: Đóng vai trò là System phân tích sự phát triển bản thân. Nhận xét các nội dung tôi vừa nhập...)"></textarea>
+      <button class="btn-save" id="savePrompt" style="margin-top:8px;">Lưu Prompt</button>
+    </div>
+    <div class="settings-group">
+      <label>Loại hoạt động theo dõi:</label>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px; color:#ccc;">
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_sent" style="margin-right:4px;"> Gửi & Enter</label>
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_draft" style="margin-right:4px;"> Gõ nháp</label>
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_copy" style="margin-right:4px;"> Copy văn bản</label>
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_click" style="margin-right:4px;"> Click & Gợi ý</label>
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_ai" style="margin-right:4px;"> Phản hồi từ AI</label>
+        <label style="display:flex;align-items:center;margin:0;"><input type="checkbox" id="chk_page" style="margin-right:4px;"> Xem trang web</label>
+      </div>
+      <button class="btn-save" id="saveTracking" style="margin-top:8px;">Lưu tuỳ chọn theo dõi</button>
+    </div>
+    <div class="settings-group" style="border-bottom:none; padding-bottom:16px;">
+      <button class="btn btn-ghost" id="exportData" style="width:100%; border:1px solid var(--border); padding:8px;">📦 Xuất toàn bộ dữ liệu (Export JSON)</button>
+    </div>
+  </div>
+  <div class="panel" id="panel-debug">
+    <div class="empty" id="emptyDebug">Chưa có debug log.</div>
+  </div>
+
+
+  <script src="popup.js"></script>
+</body>
+</html>
