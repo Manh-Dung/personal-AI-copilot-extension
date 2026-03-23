@@ -231,9 +231,9 @@ function renderEnglishLocker(allData) {
     allCorrections.slice(0, 30).forEach(g => {
       grammarList.innerHTML += `
         <div class="grammar-item">
-          <div class="grammar-original">❌ ${g.original}</div>
-          <div class="grammar-corrected">✅ ${g.corrected}</div>
-          <div class="grammar-reason">💡 ${g.reason}</div>
+          <div class="grammar-original">${g.original}</div>
+          <div class="grammar-corrected">${g.corrected}</div>
+          <div class="grammar-reason">${g.reason}</div>
         </div>
       `;
     });
