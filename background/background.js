@@ -9,6 +9,15 @@ const ALARM_NAME = 'do_summarize';
 
 console.log('[AIS BG v1.8.0] started');
 
+// ---- KHẮC PHỤC KẸT TRẠNG THÁI ----
+// Nếu Service Worker bị trình duyệt tắt giữa lúc đang fetch API, biến lưu trong chrome.storage sẽ bị kẹt là true
+// Do đó, mỗi lần khởi động lại Service worker, ta clear luôn các trạng thái đang chạy này:
+chrome.storage.local.set({ 
+  is_recapizing: false, 
+  is_weekly_recapizing: false,
+  is_summarizing: false 
+});
+
 // ---- Debug ----
 function dbg(msg) {
   console.log('[AIS BG]', msg);
